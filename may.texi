@@ -7,8 +7,7 @@
 @set NAME MAYLIB
 @set AUTHORS Patrick P@'elissier
 @set MAIL Patrick.Pelissier@@removeme@@gmail.com
-@set WEB-PAGE http://www.yaronet.com/t3
-@set COPYRIGHT 2007-2009 Patrick P@'elissier
+@set COPYRIGHT 2007-2017 Patrick P@'elissier
 @settitle @value{NAME} @value{VERSION}
 @synindex tp fn
 @iftex
