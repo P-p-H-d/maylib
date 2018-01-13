@@ -1,0 +1,408 @@
+MAY TODO : In French, since it is only for me :)
+----------
+
+++++++++++++++++++++++++++++++++++
+++++ Fonctionnalites primaires ***
+++++++++++++++++++++++++++++++++++
+
++ Algebre lineaire sur les matrices (operations elementaires, augment, resize, extract, transpose, trace, reduction de gauss, resolution des systemes (bareiss, divfree, gauss), determinant (gauss, bareiss, divfree, laplace?), polynome caracteristique, rang, noyau, valeurs/vecteurs propres, ...)
+  ==> Prototype en cours (voir t-matrix.c)
+
++ Factorisation sur Z (Distinc Degree Factorisation + Cantor-Zassenhaus) / Factorisation modulaire (?)
+  ==> Factorisation sur R ou C (Utilisation de formule classiques pour casser les degrees 2, 3 et 4).
+  ==> Solveur de polynome en une variable et/ou de systeme lineaire et/ou de f(x)=alpha avec f dans une table
+
++ limites (Gruntz)
+  ==> Necessite algebre lineaire et factorisation.
+
++ Somme indefinit sum(x^k, k=1..N)= ?
+
++ integration:
+  ==> Poor Man Integrator
+  ==> http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/
+
+
+
+++++++++++++++++++++
+++++  Extensions +++
+++++++++++++++++++++
+
++ mod(P,A)
+  A ne peut etre que :
+         un entier.
+         un polynome
+  Corps de Galois devient donc : x % UPOLY % INTEGER
+  Operation de liftage dans les entiers naturels ?
+  != remainder
+  Problem: Si on fait RootOf, l'interet de mod diminue (et inversement).
+  Exemple:      mod(x,2)+mod(y,2)*3 -> mod(x+y,2)
+ 
+ Forme  MOD(value, modulus[, vars])
+
+ Eval:  si nops != 2 et nops != 3 throw error ?
+        modulus = eval (modulus)
+        si modulus = 0 return value
+        si modulus = INTEGER
+           oldint = kernel_intmod (modulus)
+           v = reeval (value)
+           kernel_intmod (oldint)
+           si v is a MODULO and v.modulus = INTEGER
+              si v.modulus != modulus
+                      modulus = gcd (v.modulus, modulus)
+                      v = reeval (v.value)
+              sinon   v = v.value
+           return hold (mod (v, modulus)
+        sinon modulus non entier
+           var = nops() > 2 ? eval(vars) : may_indets (modulus)
+           FIXME: si flags only poly
+                     si pas poly
+                        v = may_rationalize (v)
+                        si pas poly
+                           On fait rien
+                        sinon
+           v = may_expand_mod (eval (value), modulus, var)
+           si v est un modulo
+              si v.modulus est un entier
+                 intmod = v.modulus
+                 oldint = kernel_intmod (intmod)
+                 si v.value est aussi un modulo
+                    modulus = gcd (modulus, v.value.modulus)
+                    divqr (0, &v, v.value.value, modulus, var)
+                 sinon
+                    v = v.value
+                 kernel_intmod (oldint)
+                 return hold (mod (mod (v, modulus, var), intmod)
+              sinon
+                 modulus = gcd (modulus, v.modulus)
+                 divqr (0, &v, v.value, modulus, var)
+            return hold (mod (v, modulus, var)
+ Add/Mul/Pow: eval (add/mul/pow)
+ avec modulus = gcd (modulus) s'il y en a plusieurs
+ Attention on peut avoir mod(x,2) + mod(x+1,x^2+1) qui doit donner mod(mod(1,x^2+1),2)
+ Surcharger: divqr / degree / expand / gcd / diff / ... pour qu'il les gere ? Faire un flag global ?
+ Probleme: mod((x^42-1)/(x-1),x-1,x) ?????
+           Faire avec ? Utiliser un flag pour demander de rationalizer avant et de ne rien faire si value n'est pas un polynome ? (ie. interdire de calculer l'inverse modulo).
+
++ MATRIX
+ ==> Necessite algebre lineaire.
+
+
+
+++++++++++++++++++++++++++++++++++++
+++++ Operations basiques         +++
+++++++++++++++++++++++++++++++++++++
+
+may_t   may_optimize_indets (may_t list_var).
+        Optimize la liste des indetermines. (Interne ?)
+        en recherchant des dependances algebriques entre les indetermines.
+        ==> Comment faire ?
+        Utiliser les proprietes des fonctions exp / sin / cos ?
+        Comment faire un algorithme un minimum robuste ?
+
+may_t   may_reduce (may_t x)
+        Recherche les dependances entre les indeterminees de x et retourne x
+        apres simplification par cette nouvelle base (Utilisation de may_optimize_indets).
+
+may_t   may_normal        (may_t x);
+        Forme normale d'une expression - dans la mesure du possible, deux
+        expressions egales ont leur forme normal structurellement egales
+        ou bien la difference des deux est nulle.
+        (sqrtsimp, rectform, normalsign, reduce, rationalize)
+        Penser a remplacer les valeurs non-rationalles temporairement (sqrt(2) --> a --> Utiliser RootOf ? Mod ?)
+        pour gerer (sqrt(2)-x)/(2-x^2) ?
+
+int     may_equal_p (may_t a, may_tb)
+        Retourne may_zero_p (may_normal (a-b))
+
+may_t   may_expsimp      (may_t x);
+        Simplification des expressions mettant en oeuvre des exp / log
+        ==> Difference avec may_reduce ?
+
+may_t   may_trigsimp      (may_t x);
+        Simplification des expressions mettant en oeuvres des cos/sin/tan
+        ==> comdenom + Mod ( , s^2+c^2-1) ?
+        ==> Remplacer par l'angle moitie ? sin(x)=2*t/(1+t^2) avec t=tan(x/2)
+
+int     may_upoly_p       (may_t x, may_domain_e domain, may_t var)
+        Teste si x est un polynome univarie de la variable x avec les coefficients dans le domaine 'domain'. Retourne 0 si x n'est pas, 1 si x l'est, 2 si x l'est ET tous ces coefficients sont des 'pure numbers'. Ajouter MAY_PURE_D ?
+
+may_t   may_upoly_coeff (may_t x, may_t var, mpz_srcptr deg)
+        Retourne le coeff de degree 'deg' de la variable 'var' dans 'x'.
+        Ou NULL si ce n'est pas possible.
+        (Reutilise une partie de may_degree).
+
+may_t   may_mod (may_t p1, may_t p2, may_t vars)
+        return Mod(p1, p2,vars)
+        p1 / p2 polynome (ou p2 entier)
+        vars peut etre null (may_indents)
+
+may_t   may_invmod (may_t p1, may_t p2, may_t vars)
+        return 1 / (p1 % p2)
+        p1 / p2 polynome (ou p2 entier)
+        Necessite may_gcdex
+
+may_t   may_unmod (a)
+        Enleve toute reference au modulo de a (Repasse a dans Z).
+
+may_t   may_expand_mod (may_t a, may_t modulus, may_t vars)
+        Retourne a developpe  modulo modulus (Polynome de vars)
+
+may_t   may_resultant (may_t a, may_t b, may_t x)
+        Retourne le resultant de A et de B. Voir comment on peut recuperer le code du sous-resulatant (PGCD).
+
+
+
+++++++++++++++++++++++++++++++
+++++    Amelioration       +++
+++++++++++++++++++++++++++++++
+
++ Les RANGE devraient être une extension et non pas intégré comme élément de base.
+  ==> FIXME: Vraiment ? Ca peut, mais est-ce mieux ?
+
+ + Ajouter le support de MAY_OUT_UNIT_CIRCLE et MAY_IN_UNIT_CIRCLE dans les predicate.
+
++ may_ratfactor --> may_unifactor ? --> may_ufactor ?
++ may_ratfactor devrait supporter de travailler % INTEGER <== Probleme en multivariée...
+
++ Ameliorer "evalr" pour qu'il gere plus de fonctions (trigonométrie entre autre).
+   Utiliser mpfi ?
+
++ may_rewrite:
+    Construire une methode pour faire plusieurs rewrite d'un coup de parsing.
+    Construire un arbre de décision ? Voir ce qui a été fait pour l'antidiff.
+
++ tests:
+    Utiliser un fichier a part pour stocker les données.
+
++ may_match x et $1*x+$2 marche-t-il ? J'ai des doutes.
+   Est-ce nécessaire ?
+
++ "sign(x)^2" devrait être simplifié en 1 sauf si x vaut 0.
+   "sign(x)^3" devrait être simplifié en sign(x).
+
++ 4^(1/2) % 3 vaut-il 1 (maple) ou 2 (mupad/xcas) ?
+  Faut-il simplifier 4 en 3 si N n'est pas entier ?
+  Et 4^n % 3 faut-il le simplifier en 1 ? ou pas ?
+  Probleme genéral du choix de la racine : 4^(1/2) peut donner 1 ou 2 suivant le choix du signe. 1 peut paraitre comme racine plus simple (et plus privisible car on fait tout le temps les operations de modulo).
+
++ Definir proprement degree(x^-1) et voir le conflit avec degree(0)
+
++ ./t-pika "(x+2)*INFINITY"
+==> INFINITY+INFINITY*x
+ Reponse pas vraiment fausse pour x<0 mais franchement pas très intelligente...
+
++ ./t-pika "tan(5*PI/18)*tan(7*PI/18)*sqrt(3)" -otcollect
+==> (cosh(1/2*log(3)-2/3*I*PI)+sinh(1/2*log(3)-2/3*I*PI)-sinh(1/2*log(3)-1/9*I*PI)-cosh(1/2*log(3)-1/9*I*PI)+cosh(1/2*log(3)+2/3*I*PI)+sinh(1/2*log(3)+2/3*I*PI)-sinh(1/2*log(3)+1/9*I*PI)-cosh(1/2*log(3)+1/9*I*PI))/(1-2*cos(1/9*PI))
+  ./t-pika "tan(5*PI/18)*tan(7*PI/18)" -otcollect
+==> -(1+2*cos(1/9*PI))/(1-2*cos(1/9*PI))
+ Le sqrt(3) empeche MAY de recoller les morceaux ==> A corriger !
+
++ Finir may_sqrtsimp pour que sqrt(30)*sqrt(105) == 15*sqrt(14)
+  Et (7+5*sqrt(2))^(1/3) --> (1+sqrt(2))
+  Et 1/(2^(1/2)+3^(1/2)+6^(1/2)) --> 5/23*sqrt(3)-1/23*sqrt(2)*sqrt(3)+7/23*sqrt(2)-12/23 ??
+  Et 2^(1/4)*(2^(1/2)+2)/(8+6*2^(1/2))^(1/2) --> 1 (Ca a l'air compliquée!!!!)
+  Et (5-2*3^(1/2)*x-2*2^(1/2)*3^(1/2)+2*2^(1/2)*x+x^2)/(1-2*3^(1/2)*x+x^2)
+     --> (-sqrt(3)+sqrt(2)+x)/(-sqrt(3)-sqrt(2)+x)
+  Et (19+15*2^(1/3)+12*2^(2/3))^(1/3) --> 1+2^(1/3)+2^(2/3)
+
+++++++++++++++++++++++++++++++
+++++    Corriger bugs      +++
+++++++++++++++++++++++++++++++
+
++ may_get_domain devrait etre débuggué.
+
++  (real(x)+abs(real(x)))/(real(x)+abs(real(x))) = 1
+   alors que ce n'est pas vrai presque partout...
+   On est quand meme dans la limite.
+   ==> Problème documentaire.
+
+./t-pika "ceil(log(53+10+3)/log(2.))"
+[MAYLIB]: assertion failed in range.c.302: MAY_TYPE(x)>MAY_ATOMIC_LIMIT && MAY_TYPE(x)<=MAY_END_LIMIT+may_c.extension_size
+
++ segfault si désactivation de l'overcommit :
+   echo 2 > /proc/sys/vm/overcommit_memory
+ make t-charge CFLAGS="-g"
+ ==>
+ MAY V0.7.5 (GMP V5.0.5 MPFR V3.1.0 CC=gcc CFLAGS=-g)
+Start -- Base:0x6b4000 Top:0x6bc128 Used:33064 MaxUsed:33064 Max:8321503231
+Construct (3*(a*x+b*y+c*z) with a=1/2, b=2/3 and c=4/5...
+Program received signal SIGSEGV, Segmentation fault.
+0x000000000040fd72 in sort_pair (tab=<error reading variable: Cannot access memory at address 0x7ffffffbb268>,
+    size=<error reading variable: Cannot access memory at address 0x7ffffffbb264>) at eval.c:933
+warning: Source file is more recent than executable.
+933	{
+(gdb) bt
+#0  0x000000000040fd72 in sort_pair (tab=<error reading variable: Cannot access memory at address 0x7ffffffbb268>,
+    size=<error reading variable: Cannot access memory at address 0x7ffffffbb264>) at eval.c:933
+#1  0x00000000004113a6 in may_eval_product (x=0x6bc200) at eval.c:1420
+#2  0x000000000040d21b in may_eval (x=0x6bc200) at eval.c:524
+#3  0x000000000040feea in may_eval_sum (x=0x6bc248) at eval.c:1030
+#4  0x000000000040d203 in may_eval (x=0x6bc248) at eval.c:519
+#5  0x0000000000410e7b in may_eval_product (x=0x6bc268) at eval.c:1280
+#6  0x000000000040d21b in may_eval (x=0x6bc268) at eval.c:524
+#7  0x00000000004042e5 in test_construct () at t-charge.c:75
+#8  0x0000000000408360 in main (argc=1, argv=0x7fffffffe4e8) at t-charge.c:1400
+==> Accès erroné aux variables de la pile.
+ La fonctionne alloue 260K sur la pile sans en informer l'OS ...
+ qui pense que l'on a débordé... d'où seg fault.
+ probleme compilo et / ou os...
+
+
+++++++++++++++++++++++++++++
+++++    Performance      +++
+++++++++++++++++++++++++++++
+
++ ./t-pika "tan(x)/cos(x)^1034" -otcollect
+  ==> Temps très, très long. Calcul d'un monstrueux GCD...
+
++ ./t-pika "tan(2+x)" -oseries x 100
+  ==> 2s de calcul alors que par taylor c'est instantannée.
+  ==> Améliorer la multiplication et la composition de série mais ca ne sera pas suffisant.
+
++ may_expand peut etre pas tres performant sur certains entrees.
+  ==> (1+3*x+2*x^2)^1000
+  ==> Convertir si polynome univariée en entier + gmp ? Borne d'erreur ?
+        Ameliorer les threshold
+  Determiner si le polynome est sparse ou pas ( Sparse <=> Product (Degree Max of var[i]) > (# elems)^2)
+
++ may_eval_sum / may_eval_product:
+  ==> les sommes dans les sommes doivent êetre fusionnées et non pas retriées si possibles.
+
++ may_replace (P(x), x, NUM)
+  Si P est un polynome univarie et NUM aussi, 
+  alors on peut optimiser en cachant NUM^d pour d <= degree de P
+        may_replace_upol (may_t P, may_t x, may_t num)
+                MAY_ASSERT (MAY_TYPE (x) == MAY_STRING_T && MAY_PURENUM_P(num));
+                Appel récursif avec une table de la taille de deg P+1
+                Remplissage de cette table par les valeurs calculées : faire une évaluation binaire et remplir par le haut.
+  Plus général que cela : par exemple, si on a plusieurs occurences de sqrt(x), et qu'on remplace x par un flottant (ou cos...)
+  on va calculer plusieurs fois sqrt(2.3) (x->2.3). Détecter cela et l'optimiser ? Comment ?
+        Créer x = may_compress (x)
+                Parcourt x récursivement et s'il trouve une sous-expression déjà utilisée autre part dans l'expression, il retourne cette dernière.
+                ==> Réduire la taille d'une expression / Améliorer les performances des comparaisons.
+                ==> Permet de n'avoir qu'une sous-expression 'sqrt(x)' dans mon expression.
+        may_replace devrait faire un cache spécifique (avec gestion des exponentiations déjà calculés pour calculer la nouvelle).
+        Cela n'est utile que si on remplace par quelque chose de numérique (autrement ca ne sert pas vraiment).
+
++ may_div_qr univarie:
+  Voir comment on peut faire via évaluation entièere puis remontée heuristique
+  Voir aussi comment on peut faire via une évaluation par Newton et une division par les puissances croissantes.
+
++ may_expand_var/may_collect ne devrait pas développer si possible.
+     Si pas dépendant de x, retourner x
+     Si c'est une somme, collect chacun des éléments de la somme, puis regroupement des degrées identiques.
+     Si c'est un produit, collect chacun des éléments et extraire les éléments indépendants de x des autres.
+        Développer les éléements de x si plus de 2.
+        mul_expand par les éléements indépendants.
+     Si pow et entier, expand (c'est forcément dépendant de x).
+
++ may_gcd:
+  Hack pour gérer les cas gcd(P^N,Q) sans développer P^N
+     gcd (P^n, Q^m) =
+         . g = 1
+         . g' = gcd(P,Q)
+         . tant que g' != 1
+                si n < m :
+                   g = g * g' ^n
+                   P = P/g'
+                   Q = g'
+                   m = m - n
+                sinon si n > m
+                   g = g * g' ^ m
+                   Q = Q/g'
+                   P = g'
+                   n = n - m
+                sinon
+                   g = g * g' ^ n
+                   break loop
+                g' = gcd (P, Q)
+         . return g
+  Hack: Substituer variable locale s'il existe N entier tel que y n'existe que sous la forme y^N dans les expressions.
+  Hack: réordonner les hacks de telle facon que l'on fasse la décomposition en produit / puissance avant le développement
+  des variables (et dont la détection des variables non utilisées par une expression).
+  Subresultant PRS :
+    - Trier la liste du plus petit degrée au plus grand / taille coefficient de facon à mimiser le GCD pour le PSR.
+    - Inliner la division pour ne plus avoir à faire des convertions inutiles.
+  Heuristic GCD:
+    - Mettre un point d'arrêet à partir duquel on ne calcule plus le GD heuristique.
+    - Prendre en compte tous les arguments pour ne pas avoir à convertir / déconvertir sans arrêt.
+    - Permet de prendre en compte le minimum des maximum de toutes les entrées.
+    - Une passe pour convertir / déconvertir toutes les variables ?
+    - La déconvertion ne doit pas faire la double division entiére pour récupérer le mod et le quotient.
+    - Voir si on ne peut pas évaluer plus faible quitte à échouer plus souvent, et à continuer en cas de succès (qui aura l'avantage
+      de réduire les degréees).
+  GCDMOD: A implanter.
+  Algorithme pour détecter quel algo utilisée en fonction des entréees (degréee total, nombre de variable, degréees partiels, spartivitée, ...),
+
++ Ajout d'un nouveau type SMALL_INT (=0) :
+        .type  = SMALL_INT
+        .flags = EVAL|NUM|EXPAND
+        .hash  = La valeur petite stockée
+  Permet de passer pour les entiers 16 bits (sur une plateforme 32) de 4+(4+4+4+4+4)=24 octets à 4+4=8 octets.
+  Ne gagne pas autant que de coder directement dans le pointeur même ((long)x&1) == 1 (=4 octets)
+  Mais evite de faire des tests pour vérifier si may_t est bien un pointeur et respecte mieux la norme.
+  Impact suite à intégration d'un nouveau type atomique :
+        may_enum_t:     Ajout du nouveau type en premier.
+        compact_recur1: Ajout du nouveau type.
+        may_get_name:   Retourne may_integer_name pour ce nouveau type.
+        may_eval:       Gestion du nouveau type.
+        may_recompute_hash: Gestion du nouveau type.
+        may_dump_rec:   Gestion du nouveau type.
+        may_length:     Ajout du nouveau type.
+        may_copy_c:     Ajout du nouveau type.
+        may_identical:  Ajout du nouveau type (Si les hash et les types sont égaux, les nombres sont égaux).
+        may_cmp:        Identique may_identical.
+  Impact suite à intégration d'un nouveau type entier:
+        init_num:       Reprendre : les entiers initialisés au démarrage sont des SMALL_INT.
+        may_zero_fastp: Il n'est plus nécessaire de tester si c'est INT_T: SMALL_INT_T suffit.
+        may_* predicate: Integration du nouveau type.
+        may_get_*:      Ajout du nouveau type entier.
+        may_set_*:      Ajout du nouveau type entier (FIXME: Non nécessaire vraiment, mais dommage de ne pas court-circuite le circuit d'évaluation dans ce cas là).
+        may_get_domain: Ajout du nouveau type entier.
+        may_num_*:      Ajout du nouveau type entier.
+        may_mpz_simplify: Simplification du mpz en SMALL_INT s'il rentre dans le hash.
+        evalf:          Ajout du nouveau type entier.
+        may_eval_pow:   Ajout du nouveau type entier.
+        Reprendre toutes les references a MAY_INT_T (#185).
+        Remplacer       MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T par MAY_TYPE (MAY_AT (x, 0)) <= MAY_INT_T
+        Est-ce que le constructeur MAY_INT doit fonctionner avec un SMALL_INT ?
+ ==> Evaluer interet réel : le systeme a été amélioré avec bien plus de valeurs entières cachés, ce qui rend l'interet plus limité.
+
+
+
++++++++++++++++++++++++
+++++    Errors      +++
++++++++++++++++++++++++
+
++ Classe: may_catch_c: constructeur may_error_catch (error_throw_handler, NULL);
+                       destructeur  may_error_uncatch ();
+==>
+ try {
+  may_catch_c catch;
+   /* Do some computing */
+ } catch (may_error_e error_code) {
+  std::cerr << "ERROR reported: " << may_error_what (error_code) << std::endl;
+ }
+
++ Exporter les defaults thrower
+
+
++++++++++++++++++++++++
+++++    Autres      +++
++++++++++++++++++++++++
+
++ Ajouter le cache (Hash-Table) : regler problemes de coherence.
++ Pouvoir ajouter de nouveaux operateurs.
++ Support de l'attribut visibility pour les fonctions internes (http://gcc.gnu.org/wiki/Visibility)
+
+
+++++++++++++++++++++
+++++    Doc      +++
+++++++++++++++++++++
+
+Revoir les requirements de l'alignement.
+Aligner en struct ?
+
+L'alignement d'un "long" peut etre plus petit que celui d'une structure, je pense que tu veux plutôt "suitably aligned for a struct" (l'alignement de toutes les structures est le meme, donc comme une structure peut contenir un long l'alignement est plus grand).
+
+Preciser les conditions d'utilisation de may_hold plus finement.

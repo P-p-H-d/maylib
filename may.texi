@@ -1,0 +1,2127 @@
+\input texinfo    @c -*-texinfo-*-
+@setfilename may.info
+@c Build with makeinfo --html --no-split --number-sections may.texi
+@documentencoding ISO-8859-1
+@set VERSION 0.7.5
+@set UPDATED-MONTH October 2014
+@set NAME MAYLIB
+@set AUTHORS Patrick P@'elissier
+@set MAIL Patrick.Pelissier@@removeme@@gmail.com
+@set WEB-PAGE http://www.yaronet.com/t3
+@set COPYRIGHT 2007-2009 Patrick P@'elissier
+@settitle @value{NAME} @value{VERSION}
+@synindex tp fn
+@iftex
+@afourpaper
+@end iftex
+
+@copying
+This manual documents how to install and use @value{NAME} Library,
+ version @value{VERSION}.
+
+Copyright @value{COPYRIGHT}
+
+@end copying
+
+@c  html <meta name=description content="...">
+@documentdescription
+How to install and use @value{NAME} Library, version @value{VERSION}.
+@end documentdescription
+
+@c smallbook
+@finalout
+@setchapternewpage on
+
+@ifnottex
+@node Top, Introduction, (dir), (dir)
+@top @value{NAME}
+@end ifnottex
+
+@c If TEX (Dvi, pdf, ...)
+@iftex
+@titlepage
+@title @value{NAME}
+@subtitle A symbolic number evaluator library.
+@subtitle Edition @value{VERSION}
+@subtitle @value{UPDATED-MONTH}
+@author @value{AUTHORS}
+@email{@value{MAIL}}
+
+@tex
+\global\parindent=0pt
+\global\parskip=8pt
+\global\baselineskip=13pt
+@end tex
+
+@page
+@vskip 0pt plus 1filll
+
+@end titlepage
+@headings double
+@end iftex
+
+@ifnottex
+@sp 1
+@insertcopying
+@end ifnottex
+
+@c  Don't bother with contents for html, the menus seem adequate.
+@ifnothtml
+@contents
+@end ifnothtml
+
+@menu
+* Introduction::
+* Copying::
+* Installing::
+* Reporting Bugs::
+* Basics::
+* Example::
+* Interface::
+* Contributors::
+* Concept Index::
+* Function Index::
+@end menu
+
+
+@node Introduction, Copying, Top, Top
+@comment  node-name, next, previous, up
+@unnumbered Introduction to the @value{NAME} Library
+
+@unnumberedsec Description
+
+@value{NAME} is a C library for symbolic mathematical calculations.
+It is not a CAS (Computer Algebra System): it doesn't have any
+internal programming language and it is very limited in
+functionalities. It doesn't support global variables, neither global
+functions: this is let to the user of the library.
+
+@value{NAME} is a tool for programmer, which means that he must be able
+to understand completely and fully what the tool can do and can not. This
+implies that @value{NAME} specifications should be precise and exhaustive.
+
+@value{NAME} is not designed to be efficient on pure numerical computations.
+If you plan to do heavy computations involving integer polynomial or
+float matrix (for example), you should use another tool or library,
+and/or write the code yourself.
+
+@value{NAME} should be portable to any systems that support GCC 
+(or a port of GCC) with the following assumptions :
+@itemize
+@item A @code{void (*)()} must be castable to a @code{void *} and vice-versa: we don't lose the value by applying the casting.
+@item We can't have the address of a function which is inside an array of char.
+@item @code{int *p; memset(&p, 0, sizeof p);} set p to NULL.
+@end itemize
+This is the case for the majority of the computers.
+It should work fine on 16, 32 or 64 bits systems (Windows, Linux, *BSD).
+
+Even if it only supports GCC, a port to a C99 compiler (not a C++ compiler but a real C99 compiler) should be quite easy: just replace GCC's extensions in the internal header file.
+@unnumberedsec Features
+
+@itemize @bullet
+@item Arbitrary precision integer and rational through GMP.
+@item Arbitrary precision float through MPFR.
+@item Automatic and user controlled simplification.
+@item Expansion and differentation of expressions.
+@item Substitutions and pattern matching.
+@item Calculations with symbolic and numeric matrices.
+@item Default atomic types: integer, rational, float, complex, identifier and undefined data.
+@item Extension through user defined types and user defined functions.
+@end itemize
+
+It doesn't do:
+@itemize
+@item Support of a tuning complete language.
+@item Limits, series and integrations.
+@item Factorization of polynomials.
+@item Solving a set of polynomial equations and even solving.
+@item Much more.
+@end itemize
+
+Computation on floating point numbers returns always the same output for a
+given sequence of operation, regardless of the architecture or the system
+(Thanks to MPFR).
+
+@unnumberedsec How to use this Manual
+
+Everyone should read @ref{Basics}.  If you need to install the library
+yourself, you need to read @ref{Installing}, too.
+
+The rest of the manual can be used for later reference, although it is
+probably a good idea to glance through it.
+
+
+@node Copying, Installing, Introduction, Top
+@comment  node-name, next, previous, up
+@unnumbered Copying Conditions
+
+@cindex Copying conditions
+@cindex Conditions for copying
+
+@value{NAME} is copyrighted @value{COPYRIGHT}
+
+This library is @dfn{free}; this means that everyone is free to use it and
+free to redistribute it on a free basis.  The library is not in the public
+domain; it is copyrighted and there are restrictions on its distribution, but
+these restrictions are designed to permit everything that a good cooperating
+citizen would want to do.  What is not allowed is to try to prevent others
+from further sharing any version of this library that they might get from
+you.@refill
+
+Specifically, we want to make sure that you have the right to give away copies
+of the library, that you receive source code or else can get it if you want
+it, that you can change this library or use pieces of it in new free programs,
+and that you know you can do these things.@refill
+
+To make sure that everyone has such rights, we have to forbid you to deprive
+anyone else of these rights.  For example, if you distribute copies of the
+@value{NAME} library, you must give the recipients all the rights that you have.  You
+must make sure that they, too, receive or can get the source code.  And you
+must tell them their rights.@refill
+
+Also, for our own protection, we must make certain that everyone finds out
+that there is no warranty for the @value{NAME} library.  If it is modified by
+someone else and passed on, we want their recipients to know that what they
+have is not what we distributed, so that any problems introduced by others
+will not reflect on our reputation.@refill
+
+The precise conditions of the license for the @value{NAME} library are found in the
+Lesser General Public License that accompanies the source code.
+See the file COPYING.LESSER.txt.@refill
+
+@node Installing, Reporting Bugs,Copying, Top
+@comment  node-name, next, previous, up
+@chapter Installing the @value{NAME} Library
+@cindex Installing
+
+@section How to install
+
+Here are the steps needed to install the library on Unix systems:
+
+@enumerate
+@item
+To build @value{NAME}, you first have to install GNU MP
+(version 4.1 or higher) on your computer and MPFR (version 2.1.0 or higher).
+You need @samp{GCC} (or a compatible compiler) and a @samp{make} program.
+You can get GMP at @url{http://www.gmplib.org/}, MPFR
+at @url{http://www.mpfr.org/} and GCC at @url{http://gcc.gnu.org/}.
+
+Please see their respective documentation to see how to install them.
+@item
+In the @value{NAME} source directory, type:
+
+@samp{make}
+
+Or if you have not installed GMP and/or MPFR in another directory, type:
+
+@samp{make GMP=$GMP_DIR MPFR=$MPFR_DIR}
+
+This will compile @value{NAME}, and create a library archive file @file{libmay.a}.
+
+By default, @value{NAME} is built with the assertions turned on,
+which slows down a lot the library (a factor of 3), but is a lot safer.
+To have an optimized version, type:
+
+@samp{make CFLAGS="-O2 -fomit-frame-pointer" GMP=$GMP_DIR MPFR=$MPFR_DIR}
+or
+@samp{make fast [GMP=...]}
+
+@item
+@samp{make check [GMP=...]}
+
+This will make sure the built is correct. If you get error messages, please
+report them  (@xref{Reporting Bugs}.).
+
+@item
+@samp{make install}
+
+This will copy the file  @file{may.h} to the directory
+@file{/usr/local/include}, the file @file{libmay.a} to the directory
+@file{/usr/local/lib}, and the file @file{may.info} to the directory
+@file{/usr/local/info}.
+
+Note that it is not recommended to install them in /usr/local.
+
+Type:
+@samp{make install PREFIX=$PREFIX}
+
+to install them in another directory.
+
+@end enumerate
+
+@section Known Build Problems
+
+@value{NAME} suffers from all bugs from GMP and MPFR, plus many, many more.
+
+Please report other problems. @xref{Reporting Bugs}.
+
+@section Getting the Latest Version
+
+The latest version of @value{NAME} is available from @url{@value{WEB-PAGE}}.
+
+@section Known Problems
+
+You may get a segmentation fault using @value{NAME}. This is mainly because
+the stack size is too small. Uses:
+@itemize
+@item under BASH/ZSH: ulimit -s unlimited
+@item under TCSH: unlimited
+@end itemize
+
+@node Reporting Bugs, Basics, Installing, Top
+@comment  node-name,  next,  previous,  up
+@chapter Reporting Bugs
+@cindex Reporting bugs
+
+If you think you have found a bug in the @value{NAME} Library,
+ first have a look on @url{@value{WEB-PAGE}}: perhaps this bug 
+is already known, in which case you may find there a workaround for it.
+Otherwise, please investigate
+and report it. We have made this library available to you, and it is not to ask
+too much from you, to ask you to report the bugs that you find.
+
+There are a few things you should think about when you put your bug report
+together.
+
+You have to send us a test case that makes it possible for us to reproduce the
+bug. Include instructions on how to run the test case.
+
+You also have to explain what is wrong; if you get a crash, or if the results
+printed are incorrect and in that case, in what way.
+
+Please include compiler version information in your bug report.
+
+If your bug report is good, we will do our best to help you to get a corrected
+version of the library; if the bug report is poor, we won't do anything about
+it (aside of chiding you to send better bug reports).
+
+Send your bug report to: @samp{@value{MAIL}}.
+
+If you think something in this manual is unclear, or downright incorrect, or if
+the language needs to be improved, please send a note to the same address.
+
+
+@node Basics, Example, Reporting Bugs, Top
+@comment  node-name, next, previous, up
+@chapter Basics
+@cindex Basics
+
+@cindex @file{may.h}
+All declarations needed to use @value{NAME} are collected in the include file
+@file{may.h}.  It is designed to work with both C and C++ compilers.
+You should include that file in any program using the library:
+@verbatim
+#include <may.h>
+@end verbatim
+
+It is recommended that you read the basic section of GMP and MPFR manuals
+before continuing reading this one.
+
+@section Nomenclature and Types
+
+@subsection Symbolic number: may_t
+
+@cindex Symbolic number
+@tindex @code{may_t}
+@noindent
+A @dfn{symbolic number} is a symbolic expression (an integer, a rationnal,
+a float, an identifier, a sum of such objets, a product, a power, ...).
+The C data type for such objects is @code{may_t}. 
+It is a pointer to an hidden and undocumented C struct.
+It can be seen as a tree with nodes (sum, product, functions)
+and leafs (Integer, Rationnal, float, identifier, complex).
+
+Don't mix the C variable names, and the identifiers: they are completly
+independent.
+
+
+@subsection Pair of symbolic number: may_pair_t
+
+@tindex @code{may_pair_t}
+
+@code{may_pair_t} is a pair of two @dfn{symbolic numbers}.
+
+ The first element is the field @code{first}. 
+ The second element is the field @code{second}.
+
+@subsection Domain of symbolic number: may_domain_e
+
+@tindex @code{may_domain_e}
+A domain is a part of the complex plane.
+The C data type for such objects is @code{may_domain_e}.
+The available parts are:
+@itemize
+@item MAY_COMPLEX_D: The complex plane.
+@item MAY_NONZERO_D: The complex plane without zero.
+@item MAY_NONREPOS_D: All complex such that @code{Re(x)<=0}
+@item MAY_NONRENEG_D: All complex such that @code{Re(x)>=0}
+@item MAY_NONIMPOS_D: All complex such that @code{Im(x)<=0}
+@item MAY_NONIMNEG_D: All complex such that @code{Im(x)>=0}
+@item MAY_CINTEGER_D: All complex integers
+@item MAY_CRATIONAL_D: All complex rationals.
+@item MAY_EVEN_D: All even complex integers.
+@item MAY_ODD_D: All odd complex integers.
+@item MAY_OUT_UNIT_CIRCLE_D: All complex such that @code{abs(x) >= 1}
+@item MAY_IN_UNIT_CIRCLE_D: All complex such that @code{abs(x) <= 1}
+@end itemize
+
+You can create new parts by intersecting two parts (or more) of this list:
+for example, the reals are the part defined by @code{MAY_NONIMPOS_D|MAY_NONIMNEG_D}
+- you have to use the symbol @code{|} for the intersection.
+
+Other parts of the complex plane are already defined:
+@itemize
+@item MAY_REAL_D: The reals
+@item MAY_REAL_NONPOS_D: The reals <= 0
+@item MAY_REAL_NONNEG_D: The reals >= 0
+@item MAY_REAL_POS_D: The reals > 0
+@item MAY_REAL_NEG_D: The reals < 0
+@item MAY_INTEGER_D: The integers
+@item MAY_INT_NONPOS_D: The integers <= 0
+@item MAY_INT_NONNEG_D: The integers >= 0
+@item MAY_INT_POS_D: The integers > 0
+@item MAY_INT_NEG_D: The integers < 0
+@item MAY_INT_EVEN_D: The even integers.
+@item MAY_INT_ODD_D: The odd integers.
+@item MAY_RATIONAL_D: The rationals.
+@end itemize
+
+
+@section The memory model
+
+@cindex Memory model
+
+Contrary to the classical memory model (the @code{malloc}
+and @code{free} functions and friends) where you explicitely
+say to the memory handler which areas you don't want to use anymore,
+you have to say to @value{NAME} which @dfn{symbolic number} you want to
+keep after a calculus.
+
+It is harder than using a true garbage collector, but a lot
+simpler than using the classical memory model. It seems to be
+also very efficient.
+
+When you start a new calculus, you put a mark (using 
+@code{may_mark}). Then, you create a new symbolic expression.
+You evaluate it, and keep the evaluated result (using
+@code{may_keep}): all the intermediary calculus created after
+putting the mark are deleted except the kept expression.
+
+The main philosophy of @value{NAME} is copy-on-write: a 
+@dfn{symbolic number} may be referenced by many other
+@dfn{symbolic numbers}. There is no way to known how many
+references there are (there is no reference counter or other
+tricks like this). So when you want to modify it, you have to
+create a new expression. This philosophy is usually quite good.
+But in some cases, it may be a nightmare: for example, to create
+accumulators or arithmetics on polynomial. So inside @value{NAME} itself,
+there may be some exceptions but they are locals, and not visible
+from the outside.
+
+@section The Stack
+
+@cindex Stack
+
+Like many other programs which work with mathematical expressions,
+@value{NAME} also works internally with a stack. But this stack is
+completly hidden. Putting a mark means saving the stack pointer
+value. Allocating memory is only updating the stack pointer.
+Keeping a @dfn{symbolic number} means garbaging the stack and
+moving it at the saved position of the stack.
+
+The GMP Custom Allocation functions are set to use the stack instead of the
+standard @code{malloc} functions. This may cause problems with other
+libraries which also redirect the GMP Custom Allocation for their own
+usage. MPFR caches are freed when you
+garbesh the stack.
+
+@section Evaluated form
+
+@cindex Constructor functions
+@cindex Evaluated form
+@cindex Unevaluated form
+
+Usually, you construct an expression by using @dfn{constructor functions}:
+@code{may_add_c}, @code{may_sub_c}, etc. They return the expression in
+an @dfn{unevaluated form}: they are not simplified, neither in their internal
+canonic form. The function which transforms them in @dfn{evaluated form}
+is @code{may_eval}.
+During the conversion, various simplifications are performed as well.
+This function, contrary to all other, might not copy the expression while
+changing its form (for efficiency reasons).
+
+All functions which endend with @code{_c} are @dfn{constructor functions}:
+they accept and return @dfn{unevaluated form}. All other functions, and
+except if documented otherwise, accept only and return only
+@dfn{evaluated form}.
+
+@dfn{Constructor functions} may or may not corrupt the input 
+@dfn{symbolic number} to construct the output : this liberty is let
+to the function for efficiency reasons since copying an image
+of the input may be much more expensive than performing the construction
+itself. Nevertheless, the default behavior is not to corrupt the input.
+If the function constructs the output by updating the input,
+it must explicitely say it. An evaluated symbolic number is never corrupted,
+except on garbaging.
+
+@section Boolean
+
+@value{NAME} doesn't support boolean arithmetic natively (ie. without
+an extension). In this documentation, TRUE is assumed to be a non zero
+integer (of type int), and FALSE the integer zero.
+
+
+@node Example, Interface, Basics, Top
+@comment  node-name, next, previous, up
+@chapter An example of use of the @value{NAME} Library
+@cindex Example
+
+Before using @value{NAME}, we need to initialize the library by calling
+@code{may_kernel_start}. Before quitting the program, it may be a good
+idea to call @code{may_kernel_end} to free the used memory.
+
+This example initializes the library, parses an expression, expands it,
+and finally displays the results.
+
+@example
+@{
+  may_t x, y;
+  may_kernel_start (3000000, 0);
+  x = may_parse_str ("(x+y)*(x-y)");
+  y = may_expand (x);
+  printf ("x=%s y=%s\n", may_get_string (NULL, 0, x),
+                         may_get_string (NULL, 0, y));
+  may_kernel_end ();
+@}
+@end example
+
+The first line creates two uninitialized C variables @code{x} and @code{y}.
+
+The second line initializes the @value{NAME} library.
+
+The third line parses the string @code{"(x+y)*(x-y)"}, returns
+the evaluated @dfn{symbolic number} and saves it in @code{x}.
+
+Then it expands @code{x} and stores the expanded result in @code{y}
+(in its evaluated form).
+
+Then it displays the value of @code{x} and @code{y} by converting them
+to strings before printing them.
+
+Finally, it quits the library.
+
+@node Interface, Contributors, Example, Top
+@comment  node-name, next, previous, up
+@chapter Interface
+@cindex The Interface of the @value{NAME} Library
+
+@section Kernel functions
+
+@deftypefun void may_kernel_start (size_t @var{stackSize}, int allow)
+Initialize the @value{NAME} library by allocating a stack of initial
+size at least @var{stackSize} bytes. The stack is expanded automatically if
+needed (On supported systems) if @var{allow} is not zero.
+It sets the GMP memory functions to use this stack after saving them.
+
+You must call this function before any-other call to @value{NAME} functions,
+otherwise you WILL crash your program.
+
+You can only start the @value{NAME} library once, which means that you can't
+call @code{may_kernel_start} more than once: if you call this function
+twice without calling @code{may_kernel_end} between, the behavior
+is undefined.
+@end deftypefun
+
+@deftypefun void may_kernel_end (void)
+End the @value{NAME} library by freeing the allocated stuff.
+Calling any other @value{NAME} functions except @code{may_kernel_start}
+after this function is undefined behaviour.
+@end deftypefun
+
+@deftypefun void may_kernel_stop (void)
+Stop the @value{NAME} Kernel.
+Calling any other @value{NAME} functions except @code{may_kernel_restart}
+after this function is undefined behaviour.
+It restores the original GMP memory functions.
+It is designed so that @value{NAME} can be used with other libraries which
+also change the GMP memory functions: it stops @value{NAME} so that you can
+use them.
+
+It doesn't destroy any @value{NAME} globals or state but simply pause @value{NAME}.
+@end deftypefun
+     
+@deftypefun  void may_kernel_restart (void)
+Restart the @value{NAME} library by saving the current GMP memory functions
+and restoring the @value{NAME} ones. You can use once again all the @value{NAME}
+functions.
+@end deftypefun
+
+@deftypefun mp_rnd_t may_kernel_rnd (mp_rnd_t @var{rnd})
+Set the current rounding mode used by the MPFR functions.
+Return the previous used rounding mode.
+The default is @code{GMP_RNDN}. It doesn't interfere with
+@code{mpfr_set_default_rnd_mode}.
+@end deftypefun
+
+@c @deftypefun int may_kernel_base (int @var{base})
+@c Set the current base used for input/ouput.
+@c Return the previous used base. The default is 10.
+@c NOTE: Not really supported actually.
+@c @end deftypefun
+
+@deftypefun mp_prec_t may_kernel_prec (mp_prec_t @var{prec})
+Set the current precision used for new MPFR floats.
+Return the previous used precision. The default is 113 (It may changed).
+Previous computed floats aren't expanded to this new precision.
+@end deftypefun
+
+@deftypefun may_domain_e may_kernel_domain (may_domain_e @var{domain})
+Set the current domain used for new anonymous identifier.
+Return the previous used domain. The default is @code{@value{NAME}_COMPLEX_D}
+. Previous anonymous identifiers aren't set to this new domain.
+@end deftypefun
+
+@deftypefun may_t may_kernel_intmod (may_t @var{n})
+ Set the used integer for all modulo operations, ie it defines the integer 
+ arithmetics on Z (if @var{n}=NULL or @var{n}=0) or Z/@var{n}Z (otherwise).
+ If @var{n} disapears after a heap compact, this integer is reseted
+ to NULL. However, you should not depend on this behavior.
+ It assumes n is an integer or NULL. It returns the previous used integer.
+@end deftypefun
+
+@deftypefun {unsigned long} may_kernel_intmaxsize (unsigned long @var{n})
+ Set the maximum size in bit for the size of the results of operation
+ involving integers (typically power and factorial). If the result is estimated
+ to be bigger than the given @var{n} number of bits, it won't compute it.
+ It returns the previous used number of bits.
+@end deftypefun
+
+@c  int     (*may_kernel_sort_cb (int (*n)(may_t, may_t)))(may_t, may_t);
+@c  int     (*may_kernel_zero_cb (int (*n)(may_t)))(may_t);
+
+@deftypefun int may_kernel_num_presimplify (int @var{flag})
+When you parse strings, the float numbers may be evaluated to
+the current precision if @var{flag} is set, or they may be stored as
+float-string, without evaluating them with the current precision: we 
+delay the evaluation to a later step where we know the needed precision.
+Set the current value of this flag.
+Return the previous used flag. The default is @code{1}, e.g. we
+evaluate the float at parsing time.
+@end deftypefun
+
+@deftypefun void may_kernel_info (FILE *@var{stream}, const char *@var{str})
+Display various kernel information inside the stream @var{stream} using
+the string @var{str}.
+@end deftypefun
+
+Any change in the global settings by using the may_kernel_XXXX functions has as
+consequence that you have to reevaluate all the previously computed variables
+(using @code{may_reeval}) so that theses variables are computed using this
+new set of global settings.
+
+@section Memory functions
+
+@deftypefun {void *} may_alloc (size_t @var{size})
+Allocate @var{size} bytes and return a pointer to the allocated
+memory.  The memory is not cleared.
+The value returned is a pointer to the allocated  memory, 
+which  is suitably aligned for a @code{long}, or
+@code{NULL} if the request fails.
+@end deftypefun
+
+@deftypefun {void *} may_realloc (void *@var{ptr}, size_t @var{oldsize}, size_t @var{newsize})
+Change the size of the memory block pointed to by @var{ptr}
+whose size is @var{oldsize} bytes to @var{newsize} bytes.
+The contents will be unchanged to the minimum of  the old
+and new sizes; newly allocated memory will be uninitialized.  
+@var{ptr} can not be @code{NULL} and @var{newsize} can not be @code{0},
+otherwise the behavior is undefined.
+@var{ptr} must have been returned by an earlier call to 
+@code{may_alloc} or @code{may_realloc}.
+The value returned is a pointer to the allocated  memory, 
+which  is suitably aligned for a @code{long}, or
+@code{NULL} if the request fails.
+@end deftypefun
+
+@deftypefun void may_free (void *@var{ptr}, size_t @var{oldsize})
+Tries to free the memory space pointed to by @var{ptr}, which must  have  been
+returned by a previous call to @code{may_alloc()} or @code{may_realloc()}.
+@var{oldsize} must be the size in bytes of the allocated memory. It is needed
+since it is not stored internally.
+Otherwise, or  if @code{may_free(ptr)}  has  already  been  called  before,
+or if @var{oldsize} is not equal to the size passed to @code{may_alloc}
+or @code{may_realloc},
+undefined behavior occurs.  If @var{ptr} is NULL, no operation is performed.
+
+Note 1: This function tries to free the memory, but it may fail. The only way
+to be sure the memory is cleaned is to call @code{may_compact} or friends.
+
+Note 2: To help this function to succeed, you have to call @code{may_free}
+in the reverse order of the call to @code{may_alloc}, just like some push/pop
+functions.
+@end deftypefun 
+
+@deftypefun void may_mark ([may_mark_t @var{mark}])
+Push a mark and save it in @var{mark}: all the current state of the memory is saved.
+On C99 or GNU C compilers, the parameter @var{mark} is optionnal and may be ommited:
+a dummy mark will be created at the level of the function call.
+@end deftypefun
+
+@deftypefun may_t may_compact ([may_mark_t @var{mark},]may_t @var{x})
+Compact the @dfn{symbolic number} @var{x} from the
+mark: all the created variables between
+the referenced mark  @var{mark} and the call to this function are lost, except @var{x}
+which is garbaged. @var{x} may be NULL, in which case it clears
+all the @dfn{symbolic numbers} created during the referenced mark and
+this function call.
+
+Return the new valid pointer to the compacted @dfn{symbolic number}.
+@var{x} is not a valid reference to a @dfn{symbolic number} anymore.
+You usually use it like this:
+@example
+may_mark_t mark;
+may_mark(mark);
+// Perform some computation
+// Keep only x
+ x = may_compact (mark, x);
+@end example
+On C99 or GNU C compilers, the parameter @var{mark} is optionnal and may be ommited:
+the dummy mark created using omitting the parameter in @code{may_mark} is used:
+@example
+may_mark();
+// Perform some computation
+// Keep only x
+ x = may_compact (x);
+@end example
+@end deftypefun
+
+@deftypefun {may_t *} may_compact_v ([may_mark_t @var{mark},] size_t @var{size}, may_t *@var{tab})
+Compact all the @dfn{symbolic number} stored in the array
+with @var{size} elements pointed by @var{tab}.
+If @var{tab} was allocated using @code{may_alloc}, it returns the updated @var{tab} if @var{tab} has
+to be compacted too. It returns @var{tab} otherwise.
+On C99 or GNU C compilers, the parameter @var{mark} is optionnal and may be ommited:
+the dummy mark created using omitting the parameter in @code{may_mark} is used:
+@end deftypefun
+
+@deftypefun void may_compact_va (may_mark_t @var{mark}, may_t *@var{x}, ...)
+Compact all the @dfn{symbolic numbers} passed as arguments to the function (as a variable argument list).
+The variable argument list is assumed to be composed of the address to the symbolic numbers to compact (@code{may_t*})
+It begins from @var{x} and ends when it encounters a null pointer.
+A maximum of 20 parameters can be compacted using this function.
+The parameter @var{mark} is not optionnal and can not be ommited.
+@example
+may_t x, y, z;
+may_mark_t mark;
+may_mark(mark);
+// Perform some computation
+// Keep only x, y and z
+may_compact_va (mark, &x, &y, &z, NULL);
+@end example
+@end deftypefun
+
+@deftypefun may_t may_keep ([may_mark_t @var{mark},]may_t @var{x})
+Perform a similar operation than @code{may_compact} except that it
+assumes that the parameter @var{mark} won't be used anymore.
+On C99 or GNU C compilers, the parameter @var{mark} is optionnal and may be ommited:
+the dummy mark created using omitting the parameter in @code{may_mark} is used.
+@example
+may_mark();
+// Perform some computation
+// Keep and return the expanded result
+return may_keep (may_expand (x));
+@end example
+@end deftypefun
+
+@section Setting functions
+
+@deftypefun may_t may_set_si (long @var{x})
+@deftypefunx may_t may_set_ui (unsigned long @var{x})
+@deftypefunx may_t may_set_z (mpz_t @var{x})
+@deftypefunx may_t may_set_q (mpq_t @var{x})
+@deftypefunx may_t may_set_d (double @var{x})
+@deftypefunx may_t may_set_ld (long double @var{x})
+@deftypefunx may_t may_set_fr (mpfr_t @var{x})
+Return a newly created @dfn{symbolic number}, setting it to
+@var{x}. The internal type is set to INTEGER (@code{may_set_si},
+@code{may_set_ui} and @code{may_set_z}), RATIONAL (@code{may_set_q}) and
+FLOAT (@code{may_set_d}, @code{may_set_ld} and @code{may_set_fr}).
+@end deftypefun
+
+@deftypefun may_t may_set_zz (mpz_t @var{x})
+Return a newly created @dfn{symbolic number}, setting it to
+@var{x} regardless of the current INTEGER modulo (See @code{may_kernel_intmod}).
+ The internal type is set to INTEGER.
+@end deftypefun
+
+
+@deftypefun may_t may_set_str (const char *@var{x})
+@deftypefunx may_t may_set_str_domain (const char *@var{x}, may_domain_e @var{domain})
+Return a new @dfn{symbolic number} of type IDENTIFIER (or STRING or SYMBOL,
+it is the same thing),
+setting it to @var{x} inside domain @var{domain}.
+@code{may_set_str} uses the global domain as defined by
+@code{may_kernel_domain}, whereas @code{may_set_str_domain} uses the
+given parameter @var{domain}.
+If @var{x} is @code{NAN}, @code{INFINITY}, @code{PI} or @code{I},
+it doesn't return an IDENTIFIER, but the @dfn{symbolic number} 
+@code{NAN}, @code{INFINITY}, @code{PI} or @code{I} without taking care
+about @var{domain}.
+The domain @var{domain} of @var{x} must be consistent for all the creations of
+symbols involving the string @var{x},
+until a call to @code{may_keep}, otherwise the behaviour is undefined.
+@end deftypefun
+
+@deftypefun may_t may_set_si_ui (long @var{num}, unsigned long @var{denom})
+Return a newly created @dfn{symbolic number}, setting it to the rational
+@math{ @var{num} / @var{denom} }.
+@end deftypefun
+
+@deftypefun may_t may_set_cx (may_t @var{re}, may_t @var{im})
+Return a newly created @dfn{symbolic number}, setting it to the complex
+number @math{@var{re} + @var{im} \times I}. 
+@end deftypefun
+
+@deftypefun may_t may_parse_str (const char *@var{str})
+Return a newly created @dfn{symbolic number}, setting it to the value
+of the parsed string @var{str}. It is different from @code{may_set_str}
+since this function parsed the string, whereas @code{may_set_str} just
+set an identifier.
+TODO: Explain valid input, grammar, etc.
+@example
+x = may_parse_str ("x+y+z(x*y)");
+x = may_parse_str ("x^2+y/z(x^y)");
+x = may_parse_str ("(x+cos(PI))/f(x*y+3!)");
+@end example
+@end deftypefun
+
+@section Getting functions
+
+@deftypefun int may_get_ui (unsigned long *@var{val}, may_t @var{x})
+@deftypefunx int may_get_si (long *@var{val}, may_t @var{x})
+@deftypefunx int may_get_str (const char **@var{val}, may_t @var{x})
+@deftypefunx int may_get_d (double *@var{val}, may_t @var{x})
+@deftypefunx int may_get_ld (long double *@var{val}, may_t @var{x})
+@deftypefunx int may_get_z (mpz_t @var{val}, may_t @var{x})
+@deftypefunx int may_get_q (mpq_t @var{val}, may_t @var{x})
+@deftypefunx int may_get_fr (mpfr_t @var{val}, may_t @var{x})
+Set @code{*@var{val}} to the @dfn{symbolic number} @var{x}.
+It may perform some convertions to fit the type needs.
+Return 0 if the setting was ok, and there was no convertion.
+Return 1 if the setting was ok, but a convertion was done.
+Return -1 if the setting was impossible: the internal types mismatch.
+Return -2 if the setting was impossible because the C type is too
+small to fit the requested value.
+@end deftypefun
+
+@deftypefun int may_get_cx (may_t *@var{re}, may_t *@var{im}, may_t @var{x});
+Set @code{*@var{re}} to the real part of the @dfn{symbolic number} @var{x}.
+Set @code{*@var{im}} to the imaginary part of the @dfn{symbolic number}
+@var{x}. @var{x} must be a pure numerical type (INTEGER, RATIONAL, FLOAT or
+COMPLEX).
+Return 0 if the setting was ok, and there was no convertion.
+Return 1 if the setting was ok, but a convertion was done.
+Return -1 if the setting was impossible: the internal types mismatch.
+@end deftypefun
+
+@deftypefun {char *} may_get_string (char *@var{out}, size_t @var{length}, may_t @var{x})
+Transform a @dfn{symbolic number} to a string, parsable by @code{may_parse_str}. See @code{may_parse_str} for the format of the string. The string is:
+@itemize
+@item either stored at the buffer of size @var{length} bytes, pointed by @var{out}. If the string needs more space than what is available, the string is simply cut to fit inside the buffer.
+@item or allocated on the internal stack is if @var{out} is @code{NULL}. In which case, the string is valid until a later call to @code{may_keep} or friends.
+@end itemize
+In both cases, it returns a pointer to the created string, or @code{NULL} in
+case of an error.
+@end deftypefun
+
+@section Constructors functions
+
+@deftypefun may_t may_add_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_sub_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_mul_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_div_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_mod_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_pow_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_pow_si_c (may_t @var{x}, long @var{y})
+@deftypefunx may_t may_gcd_c (may_t @var{x}, may_t @var{y})
+Construct a new @dfn{symbolic number} defined as the sum, difference,
+product, quotient, remainder, power or gcd of @var{x} and @var{y}.
+@end deftypefun
+
+@deftypefun may_t may_addinc_c (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_mulinc_c (may_t @var{x}, may_t @var{y})
+Construct a new @dfn{symbolic number} defined as the sum or product
+of @var{x} and @var{y}.
+The memory used by @var{x} may be reused to construct the result if @var{x}
+is not evaluated, making @var{x} an invalid variable which can't be used anymore.
+They are MUCH more efficient than @code{may_add_c} or @code{may_mul_c} if you use
+@var{x} as an accumulator like in this example:
+@example
+ for (i = 0; i < 100; i++) @{
+   may_t tmpresult = my_function (i);
+   acc = may_addinc_c (acc, tmpresult);
+ @}
+ acc = may_eval (acc);
+@end example
+@end deftypefun
+
+@deftypefun may_t may_neg_c (may_t @var{x})
+@deftypefunx may_t     may_sqr_c        (may_t @var{x})
+@deftypefunx  may_t     may_sqrt_c       (may_t @var{x})
+@deftypefunx  may_t     may_exp_c        (may_t @var{x})
+@deftypefunx  may_t     may_log_c        (may_t @var{x})
+@deftypefunx  may_t     may_abs_c        (may_t @var{x})
+@deftypefunx  may_t     may_sin_c        (may_t @var{x})
+@deftypefunx  may_t     may_cos_c        (may_t @var{x})
+@deftypefunx  may_t     may_tan_c        (may_t @var{x})
+@deftypefunx  may_t     may_asin_c       (may_t @var{x})
+@deftypefunx  may_t     may_acos_c       (may_t @var{x})
+@deftypefunx  may_t     may_atan_c       (may_t @var{x})
+@deftypefunx  may_t     may_sinh_c       (may_t @var{x})
+@deftypefunx  may_t     may_cosh_c       (may_t @var{x})
+@deftypefunx  may_t     may_tanh_c       (may_t @var{x})
+@deftypefunx  may_t     may_asinh_c      (may_t @var{x})
+@deftypefunx  may_t     may_acosh_c      (may_t @var{x})
+@deftypefunx  may_t     may_atanh_c      (may_t @var{x})
+@deftypefunx  may_t     may_conj_c       (may_t @var{x})
+@deftypefunx  may_t     may_real_c       (may_t @var{x})
+@deftypefunx  may_t     may_imag_c       (may_t @var{x})
+@deftypefunx  may_t     may_argument_c   (may_t @var{x})
+@deftypefunx  may_t     may_sign_c       (may_t @var{x})
+@deftypefunx  may_t     may_floor_c      (may_t @var{x})
+@deftypefunx  may_t     may_ceil_c       (may_t @var{x})
+@deftypefunx  may_t     may_fact_c       (may_t @var{x})
+@deftypefunx  may_t     may_gamma_c      (may_t @var{x})
+Construct a new @dfn{symbolic number} defined as the image of the function
+neg, sqr, sqrt, exp, log, abs, sin, cos, tan, asin, acos, atan, sinh,
+cosh, tanh, asinh, acosh, atanh, conj, real, imag, argument, sign,
+floor, ceil, factorial or gamma at @var{x}. Theses functions are handled
+internally by @value{NAME}, except ceil and factorial which are just wrappers.
+@end deftypefun
+
+@deftypefun may_t may_func_c (const char *@var{name}, may_t @var{x})
+@deftypefunx may_t may_func_domain_c (const char *@var{name}, may_t @var{x}, may_domain_e @var{domain})
+Construct a new @dfn{symbolic number} defined as the image of the function
+whose name is @var{name} at @var{x}. 
+The function is assumed to have its image inside either the global domain 
+as defined by @code{may_kernel_domain} for @code{may_func_c} or @var{domain}
+for @code{may_func_domain_c}.
+@var{name} may be one of the internal functions of @value{NAME}, 
+in which case the appropriate constructor is called, and @var{domain} is
+ignored.
+@end deftypefun
+
+@deftypefun  may_t may_range_c (may_t @var{l}, may_t @var{r})
+Construct a new @dfn{symbolic number} defined as the Real Interval from
+@var{l} to @var{r}. @var{l} and @var{r} must be numerical reals, otherwise
+the behavior is undefined.
+@end deftypefun
+
+@deftypefun  may_t may_list_vc (size_t @var{size}, const may_t *@var{tab})
+@deftypefunx may_t may_add_vc (size_t @var{size}, const may_t *@var{tab})
+@deftypefunx may_t may_mul_vc (size_t @var{size}, const may_t *@var{tab})
+Construct a new @dfn{symbolic number} defined as the list, sum or product
+of the elements of the array of size @var{size} elements, and pointed by
+@var{tab}.
+@end deftypefun
+
+@deftypefun  may_t may_list_vac (may_t @var{x}, ...)
+@deftypefunx may_t may_add_vac (may_t @var{x}, ...)
+@deftypefunx may_t may_mul_vac (may_t @var{x}, ...)
+Construct a new @dfn{symbolic number} defined as the list, sum or product
+of the elements of the given @code{va_list}.
+The @code{va_list} is assumed to be composed only of type @code{may_t}.
+It begins from @var{x}. It ends when it encounters a null pointer (@code{(may_t) 0}).
+@end deftypefun
+
+@deftypefun may_t may_diff_c (may_t @var{f}, may_t @var{vx}, may_t @var{order}, may_t @var{at})
+Construct a new @dfn{symbolic number} defined as the differentiate of order @var{order}
+of the expression @var{f} by the variable @var{vx}, evaluated at point @var{at}.
+@var{vx} must be an identifier, otherwise the behavior is undefined. @var{order} may not
+be an integer, but the meaning of the constructed expression is undefined.
+@end deftypefun
+
+@section Mathematical functions
+
+@deftypefun may_t may_add (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_sub (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_mul (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_div (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_mod (may_t @var{x}, may_t @var{y})
+@deftypefunx may_t may_pow (may_t @var{x}, may_t @var{y})
+Return a new @dfn{symbolic number} defined as the evaluated sum, difference,
+product, quotient, remainder or power of @var{x} and @var{y}.
+@end deftypefun
+
+@deftypefun   may_t     may_neg        (may_t @var{x})
+@deftypefunx  may_t     may_sqr        (may_t @var{x})
+@deftypefunx  may_t     may_sqrt       (may_t @var{x})
+@deftypefunx  may_t     may_exp        (may_t @var{x})
+@deftypefunx  may_t     may_log        (may_t @var{x})
+@deftypefunx  may_t     may_abs        (may_t @var{x})
+@deftypefunx  may_t     may_sin        (may_t @var{x})
+@deftypefunx  may_t     may_cos        (may_t @var{x})
+@deftypefunx  may_t     may_tan        (may_t @var{x})
+@deftypefunx  may_t     may_asin       (may_t @var{x})
+@deftypefunx  may_t     may_acos       (may_t @var{x})
+@deftypefunx  may_t     may_atan       (may_t @var{x})
+@deftypefunx  may_t     may_sinh       (may_t @var{x})
+@deftypefunx  may_t     may_cosh       (may_t @var{x})
+@deftypefunx  may_t     may_tanh       (may_t @var{x})
+@deftypefunx  may_t     may_asinh      (may_t @var{x})
+@deftypefunx  may_t     may_acosh      (may_t @var{x})
+@deftypefunx  may_t     may_atanh      (may_t @var{x})
+@deftypefunx  may_t     may_conj       (may_t @var{x})
+@deftypefunx  may_t     may_real       (may_t @var{x})
+@deftypefunx  may_t     may_imag       (may_t @var{x})
+@deftypefunx  may_t     may_argument   (may_t @var{x})
+@deftypefunx  may_t     may_sign       (may_t @var{x})
+@deftypefunx  may_t     may_floor      (may_t @var{x})
+@deftypefunx  may_t     may_ceil       (may_t @var{x})
+@deftypefunx  may_t     may_fact       (may_t @var{x})
+@deftypefunx  may_t     may_gamma      (may_t @var{x})
+Return a new @dfn{symbolic number} defined as the evaluated image of 
+the function
+neg, sqr, sqrt, exp, log, abs, sin, cos, tan, asin, acos, atan, sinh,
+cosh, tanh, asinh, acosh, atanh, conj, real, imag, argument, sign,
+floor, ceil, factorial or gamma 
+at @var{x}.
+@end deftypefun
+
+@section Replace functions
+
+@deftypefun may_t may_replace (may_t @var{x}, may_t @var{o}, may_t @var{n})
+Traverse the @dfn{symbolic number} @var{x} and replace each references
+to @var{o} by @var{n}. @var{o} may be a symbolic number of any type.
+It returns the newly created @dfn{symbolic number}.
+
+For nodes with variable number of arguments (sum, product), it won't look
+if a sub-expression matches @var{o}, e.g. @math{2+y} won't be replaced
+by @math{z} in @math{2+x+y}. Use @code{may_rewrite} instead.
+@end deftypefun
+
+@deftypefun may_t may_subs_c (may_t @var{x}, unsigned long @var{level}, size_t @var{sv}, const char *const*@var{v}, const void *const*@var{value})
+Traverse the @dfn{symbolic number} @var{x} and substitute
+the matching references to an identifier or a function to the corresponding
+value.
+@var{v} is an array of strings of size @var{sv}, and 
+@var{value} is an array of @dfn{symbolic numbers} or function callbacks
+(@value{NAME} identifies itself what it is)
+of size @var{sv}, otherwise the behavior is undefined.
+
+The function traverses the @dfn{symbolic number} @var{x}
+and each time it reachs:
+@itemize
+@item an identifier:
+it checks if the identifier is inside the array @var{v} and if the 
+corresponding value is a @dfn{symbolic number}. In which cases,
+it replaces the identifier by the corresponding @dfn{symbolic number}.
+@item a function call:
+it checks if the function name is inside the array @var{v} and if the 
+corresponding value is a function callback. In which cases,
+it replaces the identifier by the returned value of the callback.
+The callback as prototype:
+@code{may_t callback_c (may_t x)}.
+The callback doesn't have to return an evaluated argument.
+If the function has multiple arguments, x is the list of the arguments
+(a @dfn{symbolic number} of type LIST).
+@end itemize
+
+@var{level} defines the number of times the function must call itself
+after substituing a value: it is to avoid the circular definition error.
+But if substituing the value doesn't change the @dfn{symbolic number} (defined
+as pointer equality), it won't call again @code{may_subs_c} even if @var{level}
+is not zero, since it assumes it has reached a fixed point.
+
+It returns the newly created @dfn{symbolic number}.
+
+@end deftypefun 
+
+@deftypefun int may_match_p (may_t *@var{value}, may_t @var{x}, may_t @var{pattern}, int @var{size}, int (**@var{funcp})(may_t))
+Return TRUE if @var{x} matches the pattern @var{pattern}. 
+A @dfn{pattern} is an algebraic expression that optionally contains
+wild-cards.
+A wild-card is an identifier of the form @code{ '$NUMBER' }, where
+NUMBER is a decimal number from 0 to @code{@var{size}-1}, which represents
+an arbitrary expression. Every wild-card has an index, or a label, which is
+an unsigned integer number. Wild-cards behave like symbols: they are subject
+to the same transformations. For example, @code{$0+$0} is transformed to
+@code{2*$0}. If one wild-card appears
+multiple times in a pattern, it must match the same expression everywhere.
+
+@var{value} is an array which must be initially filled with @var{size} NULL
+pointers (otherwise the behavior of this function is undefined).
+It will be filled with the values of the corresponding wild-cards if the 
+match succeed. Otherwise, its contain is undefined.
+
+If @var{funcp} is not NULL, each wild-card is first checked with 
+its corresponding predicate function in this array. If the function returns
+FALSE when it is called with a @dfn{symbolic number},
+@code{may_match_p} assumes that this @dfn{symbolic number} can not match
+the wild-card. If the function returns TRUE, it assumes
+that the wild-card matches the @dfn{symbolic number}.
+
+Sums and products are treated in a special way. Only a maximum of one wild-card
+is allowed as a child of a sum or a product, otherwise it leads to an
+unpredictable result.
+@end deftypefun 
+
+@deftypefun may_t may_rewrite (may_t @var{x}, may_t @var{pattern}, may_t @var{newpattern})
+Rewrite the @dfn{symbolic number} @var{x} by applying the rule:
+if the pattern @var{pattern} matches any sub expression of @var{x},
+replace them by
+@var{new}. @var{pattern} and @var{new} are patterns as defined in the function
+@code{may_match_p}. The corresponding values of the wild-cards, found by trying
+to match @var{pattern}, are replaced when substituting @var{new} in the 
+place of the matching subexpression of @var{x}.
+@var{new} may not contain all the used wild-cards of the pattern @var{pattern},
+but the inverse must be true (otherwise the behavior is undefined). 
+For example, to apply the mathematical property @math{sin(x)^2+cos(x)^2 = 1},
+you may use the following code:
+@example
+ y = may_rewrite (y, may_parse_str ("$0+sin($1)^2+cos($1)^2"),
+                     may_parse_str ("$0+1"));
+@end example
+Note that @code{$1} is not used in the @var{new} pattern.
+This function may be very slow for some @dfn{symbolic numbers},
+and is currently implemented in a naive way.
+
+If @code{may_rewrite} does nothing (ie. doesn't apply any transformation),
+it returns @var{x} (and not a copy of @var{x}). This feature can be used
+to detect how many times you may have to apply @code{may_rewrite} to rewrite
+the @dfn{symbolic number} (If the transformation may introduce other
+transformations).
+@end deftypefun
+
+@section Traversal functions
+
+@deftypefun {const char *} may_get_name (may_t @var{x})
+Return the type of the @dfn{symbolic number} x.
+See next section for details on type names.
+This function always return a pointer to thoses corresponding names,
+except for user functions.
+For efficient check of the type of @var{x}, it is faster to check
+if the pointers are equals than checking if the strings are equals.
+Instead of:
+@example
+  const char *type = may_get_name (x);
+  if (strcmp (type, may_sum_name) == 0)
+@end example
+Do this:
+@example
+  const char *type = may_get_name (x);
+  if (type == may_sum_name)
+@end example
+If the node of @var{x} is not an internal function,
+it returns the name of the user function.
+The only way to identify it is to use @code{strcmp}.
+If the node of @var{x} is an user defined type, it returns the registered
+pointer to the type name.
+The fact of avoiding any name collision (between function and type) is let
+to the user. 
+@end deftypefun
+
+@deftypefun size_t may_nops (may_t @var{x})
+If the @dfn{symbolic number} @var{x} is a node (a sum, a product, ...),
+it returns the number of elements of the node. Otherwise, it returns 0.
+@end deftypefun
+
+@deftypefun may_t may_op (may_t @var{x}, size_t @var{index})
+If the @dfn{symbolic number} @var{x} is a node (a sum, a product, ...)
+and if @var{index} is inside the valid range of elements of the node,
+it returns the sub element @var{index} of the node.
+Otherwise, it returns NULL. The range starts from @code{0} and ends
+at @code{may_nops(@var{x})-1}.
+@end deftypefun
+
+@deftypefun may_t may_map_c (may_t @var{x}, may_t (*@var{func})(may_t))
+If the @dfn{symbolic number} @var{x} is a node (a sum, a product, a list, ...)
+it returns a new node of the same type whose children have been composed
+by the call of @var{func} with the corresponding child in @var{x}.
+Otherwise it returns @code{(*func) (x)}.
+@var{func} doesn't have to return an evaluated form, but it shouldn't
+expect an evaluated form if @var{x} is not an evaluated form.
+
+Example: @code{map (@{x,y,z@}, f)} gives @code{@{f(x),f(y),f(z)@}}.
+@end deftypefun
+
+@deftypefun may_t may_map2_c (may_t @var{x}, may_t (*@var{func})(may_t,void*), void*@var{data})
+Same function as @code{may_map_c} except that the called function as an extra argument for which @var{data} is given.
+It may be usefull to pass extra arguments to a function throught a wrapper.
+@end deftypefun
+
+@deftypefun may_t may_map (may_t @var{x}, may_t (*@var{func})(may_t))
+Same function as @code{may_map_c} except that it returns an evaluated form.
+@end deftypefun
+
+@deftypefun may_t may_map2 (may_t @var{x}, may_t (*@var{func})(may_t,void*), void*@var{data})
+Same function as @code{may_map2_c} except that it returns an evaluated form.
+@end deftypefun
+
+
+@section Polynomial functions
+
+All theses functions expect their input to be a polynomial.
+
+@deftypefun int may_degree (may_t *@var{coeff}, mpz_srcptr @var{degree}[], may_t *@var{leader}, may_t @var{expr}, size_t @var{numvar}, const may_t @var{var}[])
+Extract the degree, its corresponding coefficient and the leader term
+of @var{expr}, seen as a polynomial of the array of variable(s) @var{var} (of
+size @var{numvar}); store them in,
+respectively, the variables pointed by @var{degree} (an array of
+size @var{numvar}), @var{coeff} and @var{leader} (if theses pointers 
+are not NULL).
+The returned degree of @code{0} is -1.
+This function returns TRUE if it has succeeded, FALSE otherwise.
+@end deftypefun
+
+@deftypefun {long} may_degree_si (may_t @var{expr}, may_t @var{var})
+Return the degree of @var{expr} view as an univariate polynomial of the
+variable @var{var}. Returns LONG_MAX if @var{expr} is not an 
+univariate polynomial of the variable @var{var} or if the degree doesn't fit
+in a long. Return LONG_MIN if @var{expr} was 0.
+@end deftypefun
+
+@deftypefun int may_ldegree (may_t *@var{coeff}, mpz_srcptr @var{degree}[], may_t *@var{leader}, may_t @var{expr}, size_t @var{numvar}, const may_t @var{var}[])
+Extract the lowest degree, its corresponding coefficient and the leader term
+of @var{expr}, seen as a polynomial of the array of variable(s) @var{var} (of
+size @var{numvar}); store them in,
+respectively, the variables pointed by @var{degree} (an array of
+size @var{numvar}), @var{coeff} and @var{leader} (if theses pointers 
+are not NULL).
+The returned degree of @code{0} is -1.
+This function returns TRUE if it has succeeded, FALSE otherwise.
+@end deftypefun
+
+@deftypefun {long} may_ldegree_si (may_t @var{expr}, may_t @var{var})
+Return the lowest degree of @var{expr} view as an univariate polynomial of the
+variable @var{var}. Returns LONG_MAX if @var{expr} is not an 
+univariate polynomial of the variable @var{var} or if the degree doesn't fit
+in a long. Return LONG_MIN if @var{expr} was 0.
+@end deftypefun
+
+@deftypefun void may_content (may_t *@var{content}, may_t *@var{primpart}, may_t @var{b}, may_t @var{x})
+Extract the content and the primpart of @var{b} view as an univariate polynomial
+of the variable @var{x} and store them in @var{content} and @var{primpart}
+if there are not null. If @var{x} is NULL, it returns the content and the primpart of the
+implicit multivariate polynomial (ie. the integer content).
+@end deftypefun
+
+@deftypefun may_t may_sqrfree (may_t @var{a}, may_t @var{x})
+Return the square free factorisation of @var{a} view as an univariate polynomial of the variable @var{x}.
+@end deftypefun
+
+@deftypefun may_t may_ratfactor (may_t @var{a}, may_t @var{x})
+Return the factorisation of @var{a} view as an integer multivariate polynomial
+in the implicit variables (as return by @var{may_indets}) if @var{x} is NULL, or by the variable @var{x} otherwise,
+by extracting the terms of
+degree 1 over the integer from @var{a} after performing a square free factorisation.
+@end deftypefun
+
+@deftypefun int may_div_qr (may_t *@var{q}, may_t *@var{r}, may_t @var{a}, may_t @var{b}, may_t @var{var})
+Compute the quotient and the remainder of the univariate/multivariate polynomial of @var{a}
+by the univariate/multivariate polynomial @var{b} in the variable @var{var}
+(for univariate case) or the variable list @var{var} (for multivariate case) so that the
+result satisfy @code{a = b*q + r} with @code{degree(r) < degree(b) }.
+If @var{var} is not a variable or a list of variables, the behaviour is undefined.
+If @var{a} or @var{b} can not be seen as polynomial of the variable @var{a},
+it returns FALSE. It returns TRUE otherwise and stores in @var{q} the quotient if @var{q}
+is not NULL, and in @var{r} the reminder if @var{r} is not NULL.
+@end deftypefun
+
+@deftypefun void may_div_qr_xexp (may_t *@var{q}, may_t *@var{r}, may_t @var{a}, may_t @var{x}, may_t @var{n})
+Compute the quotient and the remainder of the univariate polynomial @var{a} by 
+@code{@var{x}^@var{n}}.
+@var{x} must be a variable and @var{n} must be a strictly positive integer, otherwise
+the behaviour is undefined.
+This function doesn't check if @var{a} can be seen as an univariate polynomial of
+the variable @var{x}, and just return a result which satisfy @code{a = q*x^n + r}.
+It stores in @var{q} the quotient if @var{q}
+is not NULL, and in @var{r} the reminder if @var{r} is not NULL.
+@end deftypefun
+
+@deftypefun  may_t may_indets (may_t @var{a}, may_indets_e @var{flags});
+Return the list of all the indeterminates of @var{a} view as a rational function.
+@var{flags} may be MAY_INDETS_NONE (No special treatment) 
+MAY_INDETS_NUM (Return the numerical constants like PI or sqrt(2)) as indeterminates),
+MAY_INDETS_RECUR (Perform the search recursively over the found indeterminates) or
+a combinaison of theses three flags.
+@end deftypefun
+
+@section Type names.
+
+@deftypevar {const char} may_exp_name[]
+@deftypevarx {const char} may_log_name[]
+@deftypevarx {const char} may_sin_name[]
+@deftypevarx {const char} may_cos_name[]
+@deftypevarx {const char} may_tan_name[]
+@deftypevarx {const char} may_asin_name[]
+@deftypevarx {const char} may_acos_name[]
+@deftypevarx {const char} may_atan_name[]
+@deftypevarx {const char} may_sinh_name[]
+@deftypevarx {const char} may_cosh_name[]
+@deftypevarx {const char} may_tanh_name[]
+@deftypevarx {const char} may_asinh_name[]
+@deftypevarx {const char} may_acosh_name[]
+@deftypevarx {const char} may_atanh_name[]
+@deftypevarx {const char} may_abs_name[]
+@deftypevarx {const char} may_sign_name[]
+@deftypevarx {const char} may_floor_name[]
+@deftypevarx {const char} may_mod_name[]
+@deftypevarx {const char} may_gcd_name[]
+@deftypevarx {const char} may_real_name[]
+@deftypevarx {const char} may_imag_name[]
+@deftypevarx {const char} may_conj_name[]
+@deftypevarx {const char} may_argument_name[]
+@deftypevarx {const char} may_gamma_name[]
+  The name of the internal @code{exp}, @var{log}, 
+@var{sin}, @var{cos}, @var{tan}, @var{asin}, @var{acos}, @var{atan},
+@var{sinh}, @var{cosh}, @var{tanh}, @var{asinh}, @var{acosh}, @var{atanh},
+@var{abs}, @var{sign}, @var{floor}, @var{mod}, @var{gcd}, @var{real},
+@var{imag}, @var{conj}, @var{argument} and @var{gamma} functions.
+They have only one child.
+@end deftypevar
+
+@deftypevar  {const char} may_integer_name[]
+@deftypevarx {const char} may_rational_name[]
+@deftypevarx {const char} may_float_name[]
+@deftypevarx {const char} may_complex_name[]
+@deftypevarx {const char} may_string_name[]
+@deftypevarx {const char} may_data_name[]
+The name of the internal leafs: INTEGER, RATIONAL, FLOAT, COMPLEX and STRING.
+They have no child. See Extension function section for details about DATA. 
+@end deftypevar
+
+@deftypevar  {const char} may_sum_name[]
+@deftypevarx {const char} may_product_name[]
+@deftypevarx {const char} may_pow_name[]
+The name of the internal nodes SUM, PRODUCT and POWER.
+POWER has exactly 2 children. SUM and PRODUCT have a variable number
+of children, but is assumed to be more than one.
+@end deftypevar
+
+@deftypevar  {const char} may_mat_name[]
+@deftypevarx {const char} may_list_name[]
+@deftypevarx {const char} may_range_name[]
+@deftypevarx {const char} may_diff_name[]
+Other node names.
+@end deftypevar
+
+@section Evaluating functions
+
+@deftypefun may_t may_eval (may_t @var{x})
+Evaluate @var{x}, simplify it and return it in its evaluated form.
+The used transformations are:
+@itemize
+@item at most of complexity @math{O(n \times log (n))}, where @math{n} is related to the size of the @dfn{symbolic number}.
+@item algebraically correct, possibly except for a set of measure zero: @math{y / y} is simplified into @math{1}.
+@item deterministic (The terms of sums and products are re-ordered into a deterministic way).
+@end itemize
+As soon as you evaluate a variable, all unevaluated variables which were used to build
+the evaluated variable become invalid and should not be used anymore, except as an
+argument to @code{may_eval} as long as you don't compact the stack. (They can't be
+used as inputs to other constructors too).
+@end deftypefun
+
+@deftypefun may_t may_hold (may_t @var{x})
+Hold @var{x}: mark it as evaluated without performing any simplification, for example
+to stop an infinite recursive evaluation.
+This function may be dangerous (from wrong results to a crash of the application),
+since the other functions expect an @dfn{evaluated form}.
+@end deftypefun
+
+@deftypefun may_t may_reeval (may_t @var{x})
+Reevaluate @var{x} without taking care of the internal flag saying that
+@var{x} was already evaluated, taking into account the new set of global rules (Integer modulo, precision of floats, ...).
+It simplifies it and returns it in its evaluated form.
+@end deftypefun
+
+@deftypefun may_t may_evalf (may_t @var{x})
+Evaluate @var{x} in the FLOAT domain, transforming all integers and
+rationals to floats with the current precision 
+(See @code{may_kernel_prec}).
+@end deftypefun
+
+@deftypefun may_t may_evalr (may_t @var{x})
+Evaluate @var{x} in the REAL RANGE domain, returning a REAL RANGE.
+The exact value of @var{x} is inside this RANGE.
+@end deftypefun
+
+@deftypefun may_t may_approx (may_t @var{x}, unsigned int @var{base}, unsigned long @var{n}, mp_rnd_t @var{rnd})
+Assuming @var{x} is a numerical value (otherwise the behavior of this function
+is undefined), returns a FLOAT STRING which is an approximation of @var{x}
+in base @var{base} with @var{n} digits, rounded in the direction @var{rnd}.
+See @code{may_num_presimplify} for a proper usage of this function.
+@end deftypefun
+
+@section Predicate functions
+
+All the predicate functions return true if the property is really verified.
+If the property is false or if it can't be decided, it returns false.
+
+@deftypefun int may_num_p (may_t @var{x})
+ Return true if @var{x} is numerical.
+@end deftypefun
+
+@deftypefun int may_zero_p (may_t @var{x})
+ Return true if @var{x} is zero.
+@end deftypefun
+
+@deftypefun int may_nonzero_p (may_t @var{x})
+ Return true if @var{x} is not zero.
+@end deftypefun
+
+@deftypefun int may_zero_fastp (may_t @var{x})
+ Return true if @var{x} is zero without trying to normalize the expression.
+@end deftypefun
+
+@deftypefun int may_one_p (may_t @var{x})
+ Return true if @var{x} is the integer one.
+@end deftypefun
+
+@deftypefun int may_real_p (may_t @var{x})
+ Return true if @var{x} is real (i.e. not a complex).
+@end deftypefun
+
+@deftypefun int may_pos_p (may_t @var{x})
+ Return true if @var{x} is greater than 0.
+@end deftypefun
+
+@deftypefun int may_nonneg_p (may_t @var{x})
+ Return true if @var{x} is greater than or equal to 0.
+@end deftypefun
+
+@deftypefun int may_neg_p (may_t @var{x})
+ Return true if @var{x} is less than 0..
+@end deftypefun
+
+@deftypefun int may_nonpos_p (may_t @var{x})
+ Return true if @var{x} is less than or equal to 0.
+@end deftypefun
+
+@deftypefun int may_integer_p (may_t @var{x})
+ Return true if @var{x} is integer.
+@end deftypefun
+
+@deftypefun int may_imminteger_p (may_t @var{x})
+ Return true if @var{x} is an immediate integer (i.e. with a known value).
+@end deftypefun
+
+@deftypefun int may_cinteger_p (may_t @var{x})
+ Return true if @var{x} is a complex integer (such as 1+3*I or 42).
+@end deftypefun
+
+@deftypefun int may_rational_p (may_t @var{x})
+ Return true if @var{x} is rational (integers are rational too).
+@end deftypefun
+
+@deftypefun int may_crational_p (may_t @var{x})
+ Return true if @var{x} is a complex rational.
+@end deftypefun
+
+@deftypefun int may_even_p (may_t @var{x})
+ Return true if @var{x} is an even integer.
+@end deftypefun
+
+@deftypefun int may_odd_p (may_t @var{x})
+ Return true if @var{x} is an odd integer.
+@end deftypefun
+
+@deftypefun int may_posint_p (may_t @var{x})
+ Return true if @var{x} is an integer greater than 0.
+@end deftypefun
+
+@deftypefun int may_nonnegint_p (may_t @var{x})
+ Return true if @var{x} is an integer greater than or equal to 0.
+@end deftypefun
+
+@deftypefun int may_negint_p (may_t @var{x})
+ Return true if @var{x} is an integer less than 0.
+@end deftypefun
+
+@deftypefun int may_nonposint_p (may_t @var{x})
+ Return true if @var{x} is an integer less than or equal to 0.
+@end deftypefun
+
+@deftypefun int may_prime_p (may_t @var{x})
+ Return true if @var{x} is a prime integer (See mpz_probab_prime_p for details).
+@end deftypefun
+
+@deftypefun int may_nan_p (may_t @var{x})
+ Return true if @var{x} is NAN (Not A Number) (See MPFR manual for details).
+@end deftypefun
+
+@deftypefun int may_inf_p (may_t @var{x})
+ Return true if @var{x} is INFINITY.
+@end deftypefun
+
+@deftypefun int may_undef_p (may_t @var{x})
+ Return true if @var{x} is UNDEF, e.g. a @dfn{symbolic number} which contains
+NAN.
+@end deftypefun
+
+@deftypefun int may_purenum_p (may_t @var{x})
+ Return true if @var{x} is an INTEGER, a RATIONAL, a FLOAT or a COMPLEX.
+@end deftypefun
+
+@deftypefun int may_purereal_p (may_t @var{x})
+ Return true if @var{x} is an INTEGER, a RATIONNAL or a FLOAT.
+@end deftypefun
+
+@deftypefun int may_independent_p (may_t @var{x}, may_t @var{var})
+ Return true if @var{x} is independent of @var{var}.
+@var{var} may be an indentifier (for example @code{x})
+ or a more complex expression (for example @code{exp(z)}). 
+For non identifier searching, it does pattern matching: it doesn't try to find
+any algebraic dependencies between @var{var} and @var{x}. For example, if
+@code{var = exp(z/2) and x = exp(z)}, it returns true.
+@end deftypefun
+
+@deftypefun int may_independent_vp (may_t @var{x}, may_t @var{list})
+ Assuming @var{list} is a list of identifiers otherwise the behavior is
+ undefined, return true if @var{x} is independent of all those identifiers.
+@end deftypefun
+
+@deftypefun int may_func_p (may_t @var{x}, const char *@var{funcname})
+ Return true if @var{x} contains a call to function @var{funcname}.
+@end deftypefun
+
+@deftypefun int may_exp_p (may_t @var{x}, may_exp_p_flags_e @var{flags})
+ Return true if @var{x} contains a call to a exp-log functions.
+ @code{may_exp_p_flags_e} is an enumeration of which functions you are searching for:
+ @itemize
+ @item MAY_EXP_EXP_P: The exp function.
+ @item MAY_LOG_EXP_P: The log function.
+ @item MAY_SIN_EXP_P: The sin function.
+ @item MAY_COS_EXP_P: The cos function.
+ @item MAY_TAN_EXP_P: The tan function.
+ @item MAY_ASIN_EXP_P: The arcsin function.
+ @item MAY_ACOS_EXP_P: The arccos function.
+ @item MAY_ATAN_EXP_P: The arctan function.
+ @item MAY_SINH_EXP_P: The sinh function.
+ @item MAY_COSH_EXP_P: The cosh function.
+ @item MAY_TANH_EXP_P: The tanh function.
+ @item MAY_ASINH_EXP_P: The arcsinh function.
+ @item MAY_ACOSH_EXP_P: The arccosh function.
+ @item MAY_ATANH_EXP_P: The arctanh function.
+ @end itemize
+ You may use a combinaison of any theses values to specify which you are looking for:
+ for example, @code{MAY_EXP_EXP_P|MAY_COSH_EXP_P|MAY_ATANH_EXP_P} searches for
+ the exp, cosh and atanh functions.
+@end deftypefun
+
+@deftypefun int may_compute_sign (may_t @var{x})
+ Try to compute the sign of @var{x}.
+ Return 0 if the sign is unkwown, 1 if @math{@var{x} = 0}, 
+ 2 if @math{@var{x} > 0}, 3 if @math{@var{x} >= 0},
+ 4 if @math{@var{x} < 0}, 5 if @math{@var{x} <= 0}.
+@end deftypefun
+
+@section Comparaison functions
+
+@deftypefun int may_identical (may_t @var{x}, may_t @var{y})
+ Return 0 if @var{x} and @var{y} are structurally equals.
+ Otherwise it returns a non-nul value. The returned value
+ is suitable for a total ordering, which means that if
+ @math{identical(a,b) < 0} and @math{identical(b,c) < 0}
+ then @math{identical(a,c) < 0}.
+ There is no garranty that the current way of sorting will
+ be the same in the future.
+ This function only compares the structure, and not the
+ mathematical equality, of its arguments (@code{x*(y+z)} and @code{x*y+x*z}
+ are different).
+@end deftypefun
+
+@deftypefun int may_cmp (may_t @var{x}, may_t @var{y})
+ Return 0 if @var{x} and @var{y} are structurally equals.
+ Otherwise it returns a non-nul value. The returned value
+ is suitable for a total ordering. The order is lexicographic.
+@end deftypefun
+
+@section Operator functions
+
+@deftypefun may_t may_expand (may_t @var{x})
+Return the expanded value of the @dfn{symbolic number} @var{x}, using
+the transformation @math{A*(B+C)} to @math{A*B+A*C}.
+@end deftypefun
+
+@deftypefun may_t may_collect (may_t @var{a}, may_t @var{x})
+Return the expanded value of the @dfn{symbolic number} @var{a}, view 
+as a polynomial of the variable @var{x}. If @var{x} is a list, it is view
+as a multinomial over the variables listed in @var{x}. @var{x} is assumed
+to be either a variable or a list of variable, otherwise the behaviour is
+undefined.
+@end deftypefun
+
+@deftypefun may_t may_texpand (may_t @var{x})
+Return the expanded value of the @dfn{symbolic number} @var{x}, expanding
+the trigonometric functions.
+@end deftypefun
+
+@deftypefun may_t may_diff (may_t @var{x}, may_t @var{vx})
+Return the differentiate of @var{x} by the variable @var{vx}.
+All identifiers and user functions are assumed to be independent
+of @var{vx}, except if there is an explicit use of @var{vx}.
+@end deftypefun
+
+@deftypefun may_t may_antidiff (may_t @var{x}, may_t @var{vx})
+Return the antidifferentiate of @var{x} by the variable @var{vx}
+if it exists, or NULL if it fails to compute it.
+All identifiers and user functions are assumed to be independent
+of @var{vx}, except if there is an explicit use of @var{vx}.
+@end deftypefun
+
+@deftypefun may_t may_trig2exp (may_t @var{x})
+Transform all trigonometrical functions to their exp/log equivalents.
+@end deftypefun
+
+@deftypefun may_t may_trig2tan2 (may_t @var{x})
+Transform @math{sin}, @math{cos} and @math{tan} in terms of @math{tan(z/2)}.
+@end deftypefun
+
+@deftypefun may_t may_tan2sincos (may_t @var{x})
+Transform @math{tan} to @math{sin/cos}.
+@end deftypefun
+
+@deftypefun may_t may_sin2tancos (may_t @var{x})
+Transform @math{sin} to @math{tan*cos}.
+@end deftypefun
+
+@deftypefun may_t may_sqrtsimp (may_t @var{x})
+Simplify the square roots.
+@end deftypefun
+
+@deftypefun void may_rectform (may_t *@var{re}, may_t *@var{im}, may_t @var{x})
+Extract the real part and the imaginary part of @var{x}. Store at @code{*@var{re}}
+the real part and at @code{*@var{im}} the imaginary part.
+@end deftypefun
+
+@deftypefun void may_comdenom (may_t *@var{num}, may_t *@var{denom}, may_t @var{x})
+Extract the numerator and the denominator of @var{x}, regarding @var{x} 
+as a rational function over the integers. Store at @code{*@var{num}} the 
+evaluated numerator and at @code{*@var{denom}} the evaluated denominator.
+ This function doesn't try to return a canonical form (See @code{may_rationalize}).
+@end deftypefun
+
+@deftypefun may_t may_rationalize (may_t @var{x})
+Convert @var{x} to canonical rational expression (canceling both numerator
+and denominator by their Greatest Common Divisor).
+@end deftypefun
+
+@deftypefun may_t may_taylor (may_t @var{f}, may_t @var{x}, may_t @var{a}, unsigned long @var{m})
+Return sum(diff(@var{f},@var{x},n)(@var{x}=>@var{a})/n!*(@var{x}-@var{a})^n,n=0,@var{m}). It may introduce NAN in its result since it won't compute the limit.
+@end deftypefun
+
+@deftypefun may_t may_series (may_t @var{f}, may_t @var{x}, unsigned long @var{m})
+Return the TAYLOR series of @var{f} view as a function of @var{x} up to the order @var{m-1} over 0.
+It may throw MAY_VALUATION_NOT_POS_ERR.
+@end deftypefun
+
+@deftypefun may_t may_gcd (unsigned long @var{size}, const may_t @var{tab}[])
+Compute the Greatest Common Divisor (GCD for short) of all the elements of the array @var{tab} of size @var{size}, view as polynomomial over their implicit variables.
+@end deftypefun
+
+@deftypefun may_t may_lcm (unsigned long @var{size}, const may_t @var{tab}[])
+Compute the Least Common Multiple (LCM for short) of all the elements of the array @var{tab} of size @var{size}, view as polynomomial over their implicit variables.
+@end deftypefun
+
+@deftypefun may_t may_smod (may_t @var{a}, may_t @var{b})
+Return the Modulus (in symetric representation): return @var{a} mod @var{b} in the range [-iquo(abs(b)-1,2), iquo(abs(b),2)]. @var{b} must be a positive integer, otherwise the bahaviour is undefined.
+@end deftypefun
+
+@section Iterator functions
+
+@deftypefun int may_sum_p (may_t @var{x})
+Return TRUE if @var{x} is a sum.
+@end deftypefun
+
+@deftypefun int may_product_p (may_t @var{x})
+Return TRUE if @var{x} is a product.
+@end deftypefun
+
+@tindex @code{may_iterator_t}
+
+@deftypefun may_t may_sum_iterator_init (may_iterator_t @var{it}, may_t @var{x})
+Initialize the iterator @var{it} so that it will traverse @var{x} view as a sum 
+@tex
+$$ x = \sum_{i=1}^N a_i * b_i $$
+@end tex
+with @code{a[i]} a pure numerical number and @code{b[i]} the base.
+
+It returns the pure-numerical part of the sum (ie. of base @code{0})
+or 0 if there isn't one.
+@end deftypefun
+
+@deftypefun void  may_sum_iterator_next (may_iterator_t @var{it})
+Increase the iterator @var{it} to point to the next term.
+@end deftypefun
+
+@deftypefun int may_sum_iterator_end (may_t *@var{factor}, may_t *@var{base}, may_iterator_t @var{it})
+Return TRUE if the iteration over all the terms of the sum is not finished, and in 
+such a case, return the current pointed term
+by updating @var{factor} to the pure numerical part
+and @var{base} to the base so that @code{@var{factor}*@var{base} = the current term}
+
+Return FALSE if the iteraton has finished.
+@end deftypefun
+
+@deftypefun may_t may_sum_iterator_ref (may_iterator_t @var{it})
+Return the current term pointed by @var{it}
+@end deftypefun
+
+@deftypefun may_t may_product_iterator_init (may_iterator_t @var{it}, may_t @var{x})
+Initialize the iterator @var{it} so that it will traverse @var{x} view as a product 
+@tex
+$$ x = \Pi_{i=1}^N b_{i}^{a_i} $$
+@end tex
+with @code{a[i]} a pure integer number and @code{b[i]} the base.
+
+It returns the pure-numerical part of the product (ie. of base @code{1})
+ or 1 if there isn't one.
+@end deftypefun
+
+@deftypefun void  may_product_iterator_next (may_iterator_t @var{it})
+Increase the iterator @var{it} to point to the next term.
+@end deftypefun
+
+@deftypefun int may_product_iterator_end (may_t *@var{power}, may_t *@var{base}, may_iterator_t @var{it})
+Return TRUE if the iteration over all the terms of the product is not finished, and in 
+such a case, return the current pointed term
+by updating @var{power} to the pure integer part
+and @var{base} to the base so that @code{@var{base}^@var{power} = the current term}
+
+Return FALSE if the iteraton has finished.
+@end deftypefun
+
+@deftypefun int may_product_iterator_end2 (may_t *@var{power}, may_t *@var{base}, may_iterator_t @var{it})
+Return TRUE if the iteration over all the terms of the product is not finished, and in 
+such a case, return the current pointed term
+by updating @var{power} to the power (may be not an integer)
+and @var{base} to the base so that @code{@var{base}^@var{power} = the current term}
+
+Return FALSE if the iteraton has finished.
+@end deftypefun
+
+@deftypefun may_t may_product_iterator_ref (may_iterator_t @var{it})
+Return the current term pointed by @var{it}
+@end deftypefun
+
+@section IO functions
+
+@deftypefun void may_dump (may_t @var{x})
+Dump the @dfn{symbolic number} to stdout.
+@end deftypefun
+
+@deftypefun size_t may_in_string (may_t *@var{x}, FILE *@var{in})
+Input a string from stream @var{in}, and put the read
+@dfn{symbolic number} to @code{*@var{x}}.
+Return the number of bytes read, or if an error occurred, return 0.
+@end deftypefun
+
+@deftypefun size_t may_out_string (FILE *@var{out}, may_t @var{x})
+Output @var{x} on stream @var{out}.
+Return the number of bytes written, or if an error occurred, return 0.
+@end deftypefun
+
+@section Error handling and exception
+
+@value{NAME} has three ways for handling errors:
+@itemize @bullet
+@item The functions return an error code.
+@item The functions return NAN for inputs with syntax errors.
+@item The functions throw exception.
+@end itemize
+This section describres the exception mechanisms of @value{NAME}.
+All functions may throw the MEMORY ERROR exception.
+All other throwed exceptions should be documented.
+
+@tindex @code{may_error_e}
+
+@code{may_error_e} is an enumeration of the internal failure that @value{NAME} may throws:
+@itemize @bullet
+@item MAY_MEMORY_ERR: No more memory free and the heap can't be extended.
+@item MAY_CANT_BE_CONVERTED_ERR: Can't convert an expression to another form.
+@item MAY_DIMENSION_ERR: Can't sums different expressions of different size (like list or matrix)
+@item MAY_SINGULAR_MATRIX_ERR: Can't inverse a matrix.
+@item MAY_VALUATION_NOT_POS_ERR: The valuation of the series is not strictly positive.
+@end itemize
+
+
+@comment Attention la description textuelle et le formatage de chaine et la liberation de la memoire !!!
+
+@deftypefun void may_error_catch (void (*@var{handler})(may_error_e @var{error}, const char *@var{error_desc}, const void *@var{data}), const void *@var{data})
+Register the value of some global variables (including
+the previous error handler), the function 
+@var{handler} and its associated @var{data} as
+the new error handler. The handler is a C function which doesn't return
+in normal usage but may throw exceptions using @code{longjmp} (C code)
+or @code{throw} (C++ code). It is called by @code{may_error_throw}
+after it restores some global variables.
+
+The first parameter @var{error} of the error handler is the error number (See @code{may_error_e}) which is an enumeratation.
+The second parameter @var{error_desc} is a string containing additional details about the error, or NULL.
+The last parameter @var{data} is the parameter @var{data} given to the function @code{may_error_catch}:
+it may be used to give to the error handler additional information about how to do its job (like a @code{jmpbuf} buffer).
+@end deftypefun
+
+@deftypefun   void      may_error_uncatch (void)
+Unregister the last saved error handler (See @code{may_error_catch}) and
+restore the previous error handler.
+The other global variables are not restored to their original values.
+@end deftypefun
+
+@deftypefun   void      may_error_get     (may_error_e *@var{error_ptr}, const char **{error_desc_ptr})
+Save in @var{*error_ptr} the value of the last reported error
+if @var{error_ptr} is not NULL.
+
+Save in @var{*error_desc_ptr} the value of the last reported error description
+if @var{error_ptr_desc} is not NULL.
+@end deftypefun
+
+@deftypefun   void      may_error_throw   (may_error_e @var{error}, const char *@var{error_desc})
+Restore the global variables then throw the error @var{error}
+and the error string @var{error_desc} (which may be
+NULL) using the last registered error handler (See @code{may_error_catch}),
+just before unregistering it.
+@var{error_desc} must be a pointer to a global area (not a pointer to a buffer allocated
+in the stack since it is destroyed during the throw).
+@end deftypefun
+
+@deftypefun   {const char *} may_error_what (may_error_e @var{error})
+Return a string explaining in human language what is the error
+associated to @var{error}
+@end deftypefun
+
+Example in C:
+@example
+@{
+  jmp_buf buffer;
+  int error_code = setjmp(_buffer);
+  if (error_code == 0) @{
+     may_error_catch (error_setjmp_handler, &buffer);
+     /* Do some computing */
+     may_error_uncatch ();
+  @} else @{
+     fprintf (stderr, "ERROR reported: %s\", may_error_what (error_code));
+  @}
+@}
+
+void
+error_setjmp_handler (may_error_e e, const char *desc, const void *data)
+@{
+  longjmp ( *(jmp_buf*)data, e);
+@}
+@end example
+
+Example in C++:
+@example
+@{
+  try @{
+    may_error_catch (error_throw_handler, NULL);
+     /* Do some computing */
+    may_error_uncatch ();
+  @} catch (may_error_e error_code) @{
+    std::cerr << "ERROR reported: " << may_error_what (error_code) << std::endl;
+  @}
+@}
+
+extern "C" void
+error_throw_handler (may_error_e e, const char *desc, const void *data)
+@{
+   throw e;
+@}
+@end example
+
+@section Extensions
+
+@subsection Introduction
+
+@cindex Extension
+@cindex Extension Class.
+
+You may extend @value{NAME} with your own types but they have to meet the following
+requirements:
+@itemize @bullet
+@item The operators + and * are associative: @code{(A1+A2)+A3=A1+A2+A3}
+@item The operator + is commutative @code{A1+A2=A2+A1}
+@item The operator * is commutative outside the extension class: @code{A1+B1+A2=B1+A1+A2}
+@item If the operator * is not commutative, the extension must absorb the product by a numerical into its own extension class at evaluating time: @code{Num*A1-->A2}
+@end itemize
+
+An @dfn{extension} is a @code{may_t} variable which is an instance of an @dfn{extension class}.
+
+You may overload the behaviour of the standard operators (+, *, ^, eval) for the extension
+class. Note that @code{A-B} is always parsed as @code{A+(-1)*B} and @code{A/B} as 
+@code{A*B^(-1)}. 
+
+An extension is a node whose type is the extention class and whose children are
+@code{may_t} variables. You can't create an extension with no child. If you want to add
+some data which are not @code{may_t} variables (counter, values, ...), you have to use
+the @dfn{user data} functions to create a @code{may_t} variable which encapsulates all
+theses variables: when you design the format of your type, you have to separate between
+the @code{may_t} variables and the other variables. It is needed so that the 
+@value{NAME} garbage collector knows which pointers it has to update.
+
+@subsection Interface
+
+Once you have decided of the extension format, you have to register its class so that
+@value{NAME} knows what to do with it:
+
+@tindex @code{may_extdef_t}
+@tindex @code{may_extreg_e}
+@tindex @code{may_ext_t}
+
+@deftypefun may_ext_t may_ext_register (const may_extdef_t *@var{class}, may_extreg_t @var{way})
+Register if (@var{way} = MAY_EXT_INSTALL) or update (if @var{way} = MAY_EXT_UPDATE)
+an extension class @var{class} which defines what to do with the extensions.
+If it fails (no more room to register an extension, or the extension to update is not found),
+it returns 0. Otherwise it returns the @dfn{Extension Identifying Number} of type
+@code{may_ext_t}: this number identifies the registered extension class inside @value{NAME}
+in a unique way. The class is a structure containing all the needed information to handle
+the extensions. The structure @var{class} of type @code{may_extdef_t} must remains permanent since @value{NAME} only keeps a pointer
+on it. The following fields of this structure are mandatory and must be defined:
+@itemize @bullet
+@item @code{name} : a pointer to the permanent string which defines the extension name. It is used as the name of the constructor method. It must be unique accross all extension class.
+@item @code{priority} : an integer between 1 and 1000. It defines its priority accross all extension class. The priority defines the order of the calls to the overloaded operators if there is more than one extension class as an argument to the operator: it calls the overloaded function which corresponds to the extension class of upper priority if doing inter-class computing is not needed (for example in @code{A^B}) or call the overloaded functions in the same order than their priority otherwise. For example, in the expression @code{2+A1+B1+A2+B2} if the priority of A is lower than B, the overloaded function of A is called before with @code{2+A1+A2} as an argument. Its returned value is then given as input to the overload function of B. The case whose two or more extension class have the same priority is undefined. 1 is the lowest priority, and 1000 the highest.
+@end itemize
+All other fields are optional and are callback functions. But you should set at least one, otherwise the extension does nothing. The following callbacks may be defined:
+@itemize @bullet
+@item int zero_p (may_t @var{extension});
+
+This function is called to determine if @var{extension} is the absorbing element of the field of the extension (ie. for all element of the fields of the extension class, @code{@var{extension}*element = element*@var{extension} = @var{extension}} ). It returns TRUE in this case, or FALSE otherwise.
+
+@item int nonzero_p (may_t @var{extension});
+
+This function is called to determine if @var{extension} is not the absorbing element of the field of the extension. It returns TRUE in this case, or FALSE otherwise.
+
+@item int one_p (may_t @var{extension});
+
+This function is called to determine if @var{extension} is the unitary element of the field of the extension (ie. for all element of the fields of the extension class, @code{@var{extension}*element = element*@var{extension} = element} ). It returns TRUE in this case, or FALSE otherwise.
+
+@item may_t eval (may_t @var{extension});
+
+This function has to handle the pre-evaluation step:
+transformation of the expression into
+its canonical form and evaluationg of the children.
+@var{extension} is an element of the extension class.
+
+@item unsigned long add (unsigned long @var{start}, unsigned long @var{end}, may_pair_t *@var{tab});
+
+This function has to add the extensions by updating the given array: @var{tab} is an array
+of @var{end} elements of type @code{may_pair_t} which are: from 0 to @var{start-1}, internal types
+(non-extensions) or extensions of lower priority, and from @var{start} to @var{end-1},
+extensions of the registered class. The function should update the array by doing as much
+as it can by summing the terms and returns the new number of terms in the array: this number
+must be lower or equal to @var{end} otherwise the behaviour is undefined. The array as input
+contains only evaluated elements. It must contain only evaluated elements as output too.
+
+Each @code{may_pair_t} element is a pair of @code{may_t} element: @code{.first} and @code{.second}.
+The extension is @code{.second} whereas @code{.first} may be an optionnal multiplier (which must
+be a numerical term). It is the product of both which is added to the sum.
+
+If the function does nothing, it returns @var{end}. If the function works only within the
+extension class, it sums all the extensions terms from @var{start} to @var{end-1}, store the
+new term in @code{tab[start]} and returns @var{start+1} as the new number of elements of the
+array.
+
+It is assumed that @var{start < end} otherwise the behaviour is undefined. If the function
+does not know what to do whith an extension of lower priority, it should do nothing and leave
+it in its place (maybe garbaging the array).
+
+@item unsigned long mul (unsigned long @var{start}, unsigned long @var{end}, may_pair_t *@var{tab});
+
+Same function than the addition one but for multiplications.
+
+Each @code{may_pair_t} element is a pair of @code{may_t} element: @code{.first} and @code{.second}.
+The extension is @code{.second} whereas @code{.first} may be an optionnal exponent (which must
+be a numerical term). It is the power of both which is multiplied to the product.
+
+@item may_t pow (may_t @var{base}, may_t @var{power});
+
+Compute @code{base^power}. One of @var{base} or @var{power} is of the extension class. The other is either of the extension class, of a lower class or an internal expression.
+
+@item void  stringify (may_t extension, int level, void (*put_may)(may_t ext,int level), void (*put_string)(const char *string));
+
+Convert the extension @code{extension} into a string using the given callbacks:
+ @code{put_may} is the callback to use to convert recursively the other child of the node.
+ @code{put_string} is the callback to use to put a translated string into the internal buffer.
+ @code{level} is the priority level of the current operator (0 for +, 1 for *, 2 for pow, 3 for func)
+ if the priority of the extension is greater, some brackets might be needed to have a proper
+ convertion (default: 3).
+
+@item may_t constructor (may_t @var{list});
+
+If this callback is defined, @code{may_parse_str} translates the expressions which look like
+@code{NAME(a,b,c,d...)} with NAME is the name of the extension, into extensions: it calls
+this constructor with the list @code{@{a,b,c,d...@}} as argument.
+@var{list} is a list containing the elements given by the constructor.
+It shall return an extension of the same class.
+It shouldn't evaluate its argument. The @code{eval} callback will be used to do this job.
+
+@item unsigned int flags;
+
+A bit-field integer defining some properties of the extension class.
+The bit 0 defines if the extension class is commutative for the product (if set to '0') or not (if set to '1').
+
+@item may_t exp (may_t @var{extension})
+@item may_t log (may_t @var{extension})
+@item may_t cos (may_t @var{extension})
+@item may_t sin (may_t @var{extension})
+@item may_t tan (may_t @var{extension})
+@item may_t cosh (may_t @var{extension})
+@item may_t sinh (may_t @var{extension})
+@item may_t tanh (may_t @var{extension})
+@item may_t acos (may_t @var{extension})
+@item may_t asin (may_t @var{extension})
+@item may_t atan (may_t @var{extension})
+@item may_t acosh (may_t @var{extension})
+@item may_t asinh (may_t @var{extension})
+@item may_t atanh (may_t @var{extension})
+@item may_t floor (may_t @var{extension})
+@item may_t sign (may_t @var{extension})
+@item may_t gamma (may_t @var{extension})
+@item may_t conj (may_t @var{extension})
+@item may_t real (may_t @var{extension})
+@item may_t imag (may_t @var{extension})
+@item may_t argument (may_t @var{extension})
+@item may_t abs (may_t @var{extension})
+@item may_t diff (may_t @var{extension}, may_t @var{variable})
+
+Assuming @var{extension} is a member of the extension class, 
+these functions has to perform the evaluation of the mathematical
+functions of the given argument.
+
+@end itemize
+
+Here is an example of how to use this function (my_class is similar to the internal type list). We have only overloaded the function eval and add.
+@example
+static may_ext_t my_class_ext;
+
+static unsigned long
+my_class_add (unsigned long start, unsigned long end, may_pair_t *tab)
+@{
+  unsigned long i, j, size;
+  may_t temp[end];
+  may_t my;
+
+  /* We assumed that all extensions have the same size */
+  size = may_nops (tab[start].second);
+  my = may_ext_c (my_class_ext, size);
+  for (j = 0; j < start; j++)
+    temp[j] = may_mul_c (tab[j].first, tab[j].second);
+  for (i = 0; i < size ; i++) @{
+    for (j = start ; j < end;j++)
+      temp[j] = may_mul_c (tab[j].first, may_op (tab[j].second, i));
+    may_ext_set_c (my, i, may_eval (may_add_vc (end, temp)));
+  @}
+  tab[0].first  = may_set_ui (1);
+  tab[0].second = may_eval (my);
+  return 1;
+@}
+
+static const may_extdef_t my_class = @{
+  .name = "MY_CLASS",
+  .priority = 66,
+  .eval = my_class_eval,
+  .add = my_class_add
+@};
+
+@{
+  my_class_ext = may_ext_register (&my_class, MAY_EXT_INSTALL);
+@}
+@end example
+
+Note that in this example we don't define all the operators, but only the overloaded ones.
+
+@end deftypefun
+
+@deftypefun int may_ext_unregister (const char *@var{name})
+Unregister the extension of name is @var{name}. Return true if success or
+false if the extension is not found or cannot be unregistered.
+@end deftypefun
+
+@deftypefun may_ext_t may_ext_find (const char *@var{name})
+Search for the extension whose name is @var{name} and returns its 
+Extension Identifying Number or 0 if not found.
+@end deftypefun
+
+@deftypefun may_ext_t may_ext_p (may_t @var{x})
+Return the Extension Identifying Number linked to @var{x} or 0 
+if @var{x} is not an extension.
+@end deftypefun
+
+@deftypefun {const may_extdef_t *} may_ext_get (may_ext_t @var{class})
+Return the extension class corresponding to the given Extension Identifying Number
+or NULL if @var{class} is not a registered Extension Identifying Number.
+@end deftypefun
+
+@deftypefun may_t may_ext_c (may_ext_t @var{class}, size_t @var{size})
+Return an unevaluated extension of class @var{class} with @var{size} children which
+have to be set using @var{may_ext_set_c}.
+@end deftypefun
+
+@deftypefun void may_ext_set_c (may_t @var{x}, size_t @var{i}, may_t @var{value})
+Set the child @var{i} of @var{x} which is an extension to @var{value}.
+@var{i} must be between 0 and the size of @var{x} minus one.
+@end deftypefun
+
+@subsection User Data
+
+A @dfn{user data} type is an unknown type from @value{NAME} point of 
+view. The only thing @value{NAME} knowns about it is its size, and the fact
+that it doesn't contain any pointer to any @dfn{symbolic number} or more
+generally any pointer computed by @code{may_alloc}, so that
+it can garbage it by moving its memory location, without updating the pointers
+and it can compute a hash by reading the memory.
+By itself, it has no meaning since it doesn't contain any type information.
+It is mainly used as a child node to store information about the node since
+the node can't store any information.
+
+Note that @code{mpz_t}, @code{mpq_t} and @code{mpfr_t} variables use the GMP
+memory allocator, which is by default @code{may_alloc}. It means you can't use
+such variables too.
+
+@deftypefun may_t may_data_c (size_t @var{size})
+Create a new unevaluated user data of size @var{size} bytes.
+@end deftypefun
+
+@deftypefun size_t may_data_size (may_t @var{x})
+Return the size of the user data @var{x}. If @var{x} is not a
+user data, the behavior of this function is undefined.
+@end deftypefun
+
+@deftypefun {void *} may_data_ptr (may_t @var{x})
+Return the pointer to the user data area. The returned pointer
+is suitable to store a @code{void*}.
+The user data must not be in the evaluated form, otherwise
+the behavior of this function is undefined. 
+You may fill this area until it is evaluated. 
+If @var{x} is not a user data, the behavior of this function is undefined.
+@end deftypefun
+
+@deftypefun {const void *} may_data_srcptr (may_t @var{x})
+Return the pointer to the user data area. The returned pointer
+is suitable to store a @code{void*}. 
+If @var{x} is not a user data, the behavior of this function is undefined.
+It may be or not in an evaluated form.
+@end deftypefun
+
+
+@node Contributors, Concept Index, Interface, Top
+@comment  node-name, next, previous, up
+@chapter Contributors
+
+@value{NAME} has been developped by @value{AUTHORS}.
+
+
+@node Concept Index, Function Index, Contributors, Top
+@comment  node-name,  next,  previous,  up
+@unnumbered Concept Index
+@printindex cp
+
+
+@node Function Index,  , Concept Index, Top
+@comment  node-name,  next,  previous,  up
+@unnumbered Function and Type Index
+@printindex fn
+
+@bye
