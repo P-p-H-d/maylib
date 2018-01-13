@@ -1,25 +1,24 @@
-MAY TODO : In French, since it is only for me :)
-----------
+TODO :
+------
 
-++++++++++++++++++++++++++++++++++
-++++ Fonctionnalites primaires ***
-++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++
+++++ Primay Functions ***
++++++++++++++++++++++++++
 
-+ Algebre lineaire sur les matrices (operations elementaires, augment, resize, extract, transpose, trace, reduction de gauss, resolution des systemes (bareiss, divfree, gauss), determinant (gauss, bareiss, divfree, laplace?), polynome caracteristique, rang, noyau, valeurs/vecteurs propres, ...)
-  ==> Prototype en cours (voir t-matrix.c)
++ Linear Algebra over the Matrix.
+  ==> WIP (See t-matrix.c)
 
-+ Factorisation sur Z (Distinc Degree Factorisation + Cantor-Zassenhaus) / Factorisation modulaire (?)
-  ==> Factorisation sur R ou C (Utilisation de formule classiques pour casser les degrees 2, 3 et 4).
-  ==> Solveur de polynome en une variable et/ou de systeme lineaire et/ou de f(x)=alpha avec f dans une table
++ Factorisation over Z (Distinc Degree Factorisation + Cantor-Zassenhaus) / Modular Factorisation (?)
+  ==> Factorisation over R or C
 
-+ limites (Gruntz)
-  ==> Necessite algebre lineaire et factorisation.
++ Limits (Gruntz)
+  ==> Need linear algebra and factorization.
 
-+ Somme indefinit sum(x^k, k=1..N)= ?
++ Undefined sum:
+   sum(x^k, k=1..N)= ?
 
-+ integration:
-  ==> Poor Man Integrator
-  ==> http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/
++ Integration:
+  ==> Poor Man Integrator (See http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/ )
 
 
 
