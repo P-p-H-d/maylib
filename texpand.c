@@ -74,7 +74,7 @@ tchebycheff_var (long n, int first_kind, int askabs, may_t arg)
   may_t r = MAY_NODE_C (MAY_SUM_T, n+1);
   long i;
   for (i = 0; i <= n; i++)
-    MAY_SET_AT (r, i, may_mul_c (may_set_si (askabs ? abs (coeff[i]) : coeff[i] ),
+    MAY_SET_AT (r, i, may_mul_c (may_set_si (askabs ? labs (coeff[i]) : coeff[i] ),
                                  may_pow_si_c (arg, i)));
   return may_eval (r);
 }
@@ -134,7 +134,7 @@ cos_expand (may_t x)
   } else if (MAY_TYPE (x) == MAY_FACTOR_T
              && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
              && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
-    long n = abs (mpz_get_si (MAY_INT (MAY_AT (x, 0))));
+    long n = labs (mpz_get_si (MAY_INT (MAY_AT (x, 0))));
     may_t arg = may_cos (MAY_AT (x, 1));
     if (MAY_UNLIKELY (n == 1))
       return arg;
@@ -202,7 +202,7 @@ cosh_expand (may_t x)
   } else if (MAY_TYPE (x) == MAY_FACTOR_T
              && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
              && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
-    long n = abs (mpz_get_si (MAY_INT (MAY_AT (x, 0))));
+    long n = labs (mpz_get_si (MAY_INT (MAY_AT (x, 0))));
     may_t arg = may_cosh (MAY_AT (x, 1));
     if (MAY_UNLIKELY (n == 1))
       return arg;
