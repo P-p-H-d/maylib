@@ -26,105 +26,47 @@ TODO :
 ++++  Extensions +++
 ++++++++++++++++++++
 
-+ mod(P,A)
-  A ne peut etre que :
-         un entier.
-         un polynome
-  Corps de Galois devient donc : x % UPOLY % INTEGER
-  Operation de liftage dans les entiers naturels ?
-  != remainder
-  Problem: Si on fait RootOf, l'interet de mod diminue (et inversement).
-  Exemple:      mod(x,2)+mod(y,2)*3 -> mod(x+y,2)
- 
- Forme  MOD(value, modulus[, vars])
-
- Eval:  si nops != 2 et nops != 3 throw error ?
-        modulus = eval (modulus)
-        si modulus = 0 return value
-        si modulus = INTEGER
-           oldint = kernel_intmod (modulus)
-           v = reeval (value)
-           kernel_intmod (oldint)
-           si v is a MODULO and v.modulus = INTEGER
-              si v.modulus != modulus
-                      modulus = gcd (v.modulus, modulus)
-                      v = reeval (v.value)
-              sinon   v = v.value
-           return hold (mod (v, modulus)
-        sinon modulus non entier
-           var = nops() > 2 ? eval(vars) : may_indets (modulus)
-           FIXME: si flags only poly
-                     si pas poly
-                        v = may_rationalize (v)
-                        si pas poly
-                           On fait rien
-                        sinon
-           v = may_expand_mod (eval (value), modulus, var)
-           si v est un modulo
-              si v.modulus est un entier
-                 intmod = v.modulus
-                 oldint = kernel_intmod (intmod)
-                 si v.value est aussi un modulo
-                    modulus = gcd (modulus, v.value.modulus)
-                    divqr (0, &v, v.value.value, modulus, var)
-                 sinon
-                    v = v.value
-                 kernel_intmod (oldint)
-                 return hold (mod (mod (v, modulus, var), intmod)
-              sinon
-                 modulus = gcd (modulus, v.modulus)
-                 divqr (0, &v, v.value, modulus, var)
-            return hold (mod (v, modulus, var)
- Add/Mul/Pow: eval (add/mul/pow)
- avec modulus = gcd (modulus) s'il y en a plusieurs
- Attention on peut avoir mod(x,2) + mod(x+1,x^2+1) qui doit donner mod(mod(1,x^2+1),2)
- Surcharger: divqr / degree / expand / gcd / diff / ... pour qu'il les gere ? Faire un flag global ?
- Probleme: mod((x^42-1)/(x-1),x-1,x) ?????
-           Faire avec ? Utiliser un flag pour demander de rationalizer avant et de ne rien faire si value n'est pas un polynome ? (ie. interdire de calculer l'inverse modulo).
++ MODULO(P,A)
+  A : integer or polynom
 
 + MATRIX
- ==> Necessite algebre lineaire.
 
 
 
-++++++++++++++++++++++++++++++++++++
-++++ Operations basiques         +++
-++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++
+++++ Basic Operations         +++
++++++++++++++++++++++++++++++++++
 
 may_t   may_optimize_indets (may_t list_var).
-        Optimize la liste des indetermines. (Interne ?)
-        en recherchant des dependances algebriques entre les indetermines.
-        ==> Comment faire ?
-        Utiliser les proprietes des fonctions exp / sin / cos ?
-        Comment faire un algorithme un minimum robuste ?
+        Optimize the list of dependencies by looking for algebric dependencies.
+        ==> How to do?
 
 may_t   may_reduce (may_t x)
-        Recherche les dependances entre les indeterminees de x et retourne x
-        apres simplification par cette nouvelle base (Utilisation de may_optimize_indets).
-
+        Compute the list of variables, and use it to reduce / simplify the expression.
+        
 may_t   may_normal        (may_t x);
-        Forme normale d'une expression - dans la mesure du possible, deux
-        expressions egales ont leur forme normal structurellement egales
-        ou bien la difference des deux est nulle.
+        "Normal" form of an expression.
+        Two equal expressions should have the same normal representation
+        or at least the difference between them should be zero.
         (sqrtsimp, rectform, normalsign, reduce, rationalize)
-        Penser a remplacer les valeurs non-rationalles temporairement (sqrt(2) --> a --> Utiliser RootOf ? Mod ?)
-        pour gerer (sqrt(2)-x)/(2-x^2) ?
+        How to handle (sqrt(2)-x)/(2-x^2) ?
 
 int     may_equal_p (may_t a, may_tb)
-        Retourne may_zero_p (may_normal (a-b))
+        Return may_zero_p (may_normal (a-b))
 
 may_t   may_expsimp      (may_t x);
-        Simplification des expressions mettant en oeuvre des exp / log
-        ==> Difference avec may_reduce ?
+        Simplify expression using exp / log
+        ==> Difference with may_reduce?
 
 may_t   may_trigsimp      (may_t x);
-        Simplification des expressions mettant en oeuvres des cos/sin/tan
-        ==> comdenom + Mod ( , s^2+c^2-1) ?
-        ==> Remplacer par l'angle moitie ? sin(x)=2*t/(1+t^2) avec t=tan(x/2)
+        Simplify expression using cos / sin / tan
+        ==> Difference with may_reduce?
+        ==> Replace with half andle? sin(x)=2*t/(1+t^2) avec t=tan(x/2)
 
 int     may_upoly_p       (may_t x, may_domain_e domain, may_t var)
-        Teste si x est un polynome univarie de la variable x avec les coefficients dans le domaine 'domain'. Retourne 0 si x n'est pas, 1 si x l'est, 2 si x l'est ET tous ces coefficients sont des 'pure numbers'. Ajouter MAY_PURE_D ?
-
+        Test if 'x' is an univariated polynom of the variable 'var' with the coefficients in the domain 'domain'.
+        Return 0 if failure, 1 if success, 2 if success AND all the coefficients are pure numbers.
+        
 may_t   may_upoly_coeff (may_t x, may_t var, mpz_srcptr deg)
         Retourne le coeff de degree 'deg' de la variable 'var' dans 'x'.
         Ou NULL si ce n'est pas possible.
