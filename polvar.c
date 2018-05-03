@@ -51,6 +51,7 @@ add_polvar (may_list_t list, may_t x, may_t expo)
       add_polvar (list, MAY_AT (x, 0), expo);
       break;
     } /* else fall down to default */
+    /* Falls through. */
   default:
     /* Check if x is already in list */
     n = may_list_get_size (list);
@@ -101,6 +102,7 @@ remove_polvar (may_list_t list, may_list_t org, may_t x, may_t expo)
       remove_polvar (list, org, MAY_AT (x, 0), expo);
       break;
     } /* else fall down to default */
+    /* Falls through. */
   default:
     /* Add x in list if it is found in org */
     n = may_list_get_size (org);
@@ -269,6 +271,7 @@ add_ratvar (may_list_t list, may_t x, may_indets_e flags)
       add_ratvar (list, MAY_AT (x, 0), flags);
       break;
     } /* else fall down to default */
+    /* Falls through. */
   default:
     may_list_push_back_single (list, x);
     if (MAY_UNLIKELY ((flags & MAY_INDETS_RECUR) != 0 && MAY_NODE_P (x))) {

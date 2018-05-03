@@ -238,6 +238,7 @@ may_subs_recur2 (may_t x, unsigned long level, struct may_subs_s *context)
           context->mask |= 1ULL << (MAY_TYPE (x) - MAY_EXP_T);
       }
       /* Fall down to default code */
+    /* Falls through. */
     default:
       n = MAY_NODE_SIZE(x);
       y = MAY_NODE_C (MAY_TYPE(x), n);

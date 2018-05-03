@@ -165,7 +165,7 @@ rectform (may_t *r, may_t *i, may_t x)
       }
       break;
     }
-    /* Else fall down */
+    /* Falls through. */
   case MAY_STRING_T:
   default:
     if (MAY_UNLIKELY (may_real_p (x))) {

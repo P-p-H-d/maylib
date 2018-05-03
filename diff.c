@@ -202,6 +202,7 @@ may_diff_recur (may_t x, may_t vx)
         break;
       }
       /* Fall down to default code */
+    /* Falls through. */
     default:
       if (MAY_EXT_P (x) && MAY_EXT_GETX (x)->diff)
         y = (*MAY_EXT_GETX (x)->diff) (x, vx);

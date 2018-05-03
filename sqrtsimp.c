@@ -299,6 +299,7 @@ may_sqrtsimp_recur_c (may_t x)
         return may_pow_c (base, MAY_N_ONE);
     }
     /* Go down */
+    /* Falls through. */
   default:
     { /* Call the function recursively */
       may_size_t i, n = MAY_NODE_SIZE(x);
