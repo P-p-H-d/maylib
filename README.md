@@ -1,6 +1,6 @@
 # maylib
 
-MAYLIB is a C library for symbolic mathematical calculations.
+MAYLIB is a C library for doing symbolic mathematical calculations.
 It is not a CAS (Computer Algebra System): it doesn't have any
 internal programming language and it is very limited in
 functionalities. It doesn't support global variables, neither global
@@ -20,7 +20,7 @@ and/or write the code yourself.
 Here are the steps needed to install the library on Unix systems:
 
 To build MAYLIB, you first have to install GNU MP
-(version 4.1 or higher) on your computer and MPFR (version 2.1.0 or higher).
+(version 4.2 or higher) on your computer and MPFR (version 2.1.0 or higher).
 You need GCC (or a compatible compiler) and a make program.
 You have to get [GMP](http://www.gmplib.org/), [MPFR](http://www.mpfr.org/) and [GCC](http://gcc.gnu.org/). Please see their respective documentation to see how to install them.
 

@@ -333,18 +333,8 @@ may_kernel_restart (void)
   MAY_LOG_MSG (("Restart MAYLIB Kernel\n"));
   /* Free MPFR cache before changing the memory handler */
   mpfr_free_cache ();
-  /* Starting from GMP 4.2, we have to use a dedicated service
-     to save the state of the memory handler.
-     Otherwise we have a direct access to the ressources. */
-#if (__GNU_MP_VERSION >= 4 && __GNU_MP_VERSION_MINOR >= 2) \
-  || __GNU_MP_VERSION >= 5
   mp_get_memory_functions (&may_c.org_gmp_alloc,
                            &may_c.org_gmp_realloc, &may_c.org_gmp_free);
-#else
-  may_c.org_gmp_alloc   = __gmp_allocate_func;
-  may_c.org_gmp_realloc = __gmp_reallocate_func;
-  may_c.org_gmp_free    = __gmp_free_func;
-#endif
   /* Set the dedicated MAY functions for GMP */
   mp_set_memory_functions (may_alloc, may_realloc, may_free );
 }

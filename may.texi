@@ -200,7 +200,7 @@ Here are the steps needed to install the library on Unix systems:
 @enumerate
 @item
 To build @value{NAME}, you first have to install GNU MP
-(version 4.1 or higher) on your computer and MPFR (version 2.1.0 or higher).
+(version 4.2 or higher) on your computer and MPFR (version 2.1.0 or higher).
 You need @samp{GCC} (or a compatible compiler) and a @samp{make} program.
 You can get GMP at @url{http://www.gmplib.org/}, MPFR
 at @url{http://www.mpfr.org/} and GCC at @url{http://gcc.gnu.org/}.
