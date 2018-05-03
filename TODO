@@ -68,28 +68,20 @@ int     may_upoly_p       (may_t x, may_domain_e domain, may_t var)
         Return 0 if failure, 1 if success, 2 if success AND all the coefficients are pure numbers.
         
 may_t   may_upoly_coeff (may_t x, may_t var, mpz_srcptr deg)
-        Retourne le coeff de degree 'deg' de la variable 'var' dans 'x'.
-        Ou NULL si ce n'est pas possible.
-        (Reutilise une partie de may_degree).
 
 may_t   may_mod (may_t p1, may_t p2, may_t vars)
-        return Mod(p1, p2,vars)
-        p1 / p2 polynome (ou p2 entier)
-        vars peut etre null (may_indents)
 
 may_t   may_invmod (may_t p1, may_t p2, may_t vars)
-        return 1 / (p1 % p2)
-        p1 / p2 polynome (ou p2 entier)
-        Necessite may_gcdex
+        Need may_gcdex
 
 may_t   may_unmod (a)
-        Enleve toute reference au modulo de a (Repasse a dans Z).
+        Remove any reference to a modulo extension.
 
 may_t   may_expand_mod (may_t a, may_t modulus, may_t vars)
-        Retourne a developpe  modulo modulus (Polynome de vars)
+        Return a developped  modulo modulus
 
 may_t   may_resultant (may_t a, may_t b, may_t x)
-        Retourne le resultant de A et de B. Voir comment on peut recuperer le code du sous-resulatant (PGCD).
+        Return the resultant
 
 
 
@@ -97,96 +89,61 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
 ++++    Amelioration       +++
 ++++++++++++++++++++++++++++++
 
-+ Les RANGE devraient être une extension et non pas intégré comme élément de base.
-  ==> FIXME: Vraiment ? Ca peut, mais est-ce mieux ?
++ RANGE : Can be an extension.
+  ==> TBC if good idea.
 
- + Ajouter le support de MAY_OUT_UNIT_CIRCLE et MAY_IN_UNIT_CIRCLE dans les predicate.
++ Add support of MAY_OUT_UNIT_CIRCLE and MAY_IN_UNIT_CIRCLE in the predicate.
 
 + may_ratfactor --> may_unifactor ? --> may_ufactor ?
-+ may_ratfactor devrait supporter de travailler % INTEGER <== Probleme en multivariée...
 
-+ Ameliorer "evalr" pour qu'il gere plus de fonctions (trigonométrie entre autre).
-   Utiliser mpfi ?
++ Improve "evalr" to support more function (trigo ?)
 
 + may_rewrite:
-    Construire une methode pour faire plusieurs rewrite d'un coup de parsing.
-    Construire un arbre de décision ? Voir ce qui a été fait pour l'antidiff.
+    Better algorithm to implement.
 
 + tests:
-    Utiliser un fichier a part pour stocker les données.
+    Use separate data file.
 
-+ may_match x et $1*x+$2 marche-t-il ? J'ai des doutes.
-   Est-ce nécessaire ?
++ may_match the pattern '$1*x+$2' over 'x' won't work.
+  ==> TBC if needed.
 
-+ "sign(x)^2" devrait être simplifié en 1 sauf si x vaut 0.
-   "sign(x)^3" devrait être simplifié en sign(x).
++ "sign(x)^2" can be simplified in 1 except if x is 0.
++ "sign(x)^3" can be simplified in sign(x)
 
-+ 4^(1/2) % 3 vaut-il 1 (maple) ou 2 (mupad/xcas) ?
-  Faut-il simplifier 4 en 3 si N n'est pas entier ?
-  Et 4^n % 3 faut-il le simplifier en 1 ? ou pas ?
-  Probleme genéral du choix de la racine : 4^(1/2) peut donner 1 ou 2 suivant le choix du signe. 1 peut paraitre comme racine plus simple (et plus privisible car on fait tout le temps les operations de modulo).
++ 4^(1/2) % 3 = 1 (maple) or 2 (mupad/xcas) ?
+  Problem of the choice of the root : 4^(1/2) can be  1 or 2 depending on the sign.
 
-+ Definir proprement degree(x^-1) et voir le conflit avec degree(0)
++ Define degree(x^-1)
 
-+ ./t-pika "(x+2)*INFINITY"
-==> INFINITY+INFINITY*x
- Reponse pas vraiment fausse pour x<0 mais franchement pas très intelligente...
++ ./t-pika "(x+2)*INFINITY" ==> INFINITY+INFINITY*x
+ Not very useful answer.
 
 + ./t-pika "tan(5*PI/18)*tan(7*PI/18)*sqrt(3)" -otcollect
 ==> (cosh(1/2*log(3)-2/3*I*PI)+sinh(1/2*log(3)-2/3*I*PI)-sinh(1/2*log(3)-1/9*I*PI)-cosh(1/2*log(3)-1/9*I*PI)+cosh(1/2*log(3)+2/3*I*PI)+sinh(1/2*log(3)+2/3*I*PI)-sinh(1/2*log(3)+1/9*I*PI)-cosh(1/2*log(3)+1/9*I*PI))/(1-2*cos(1/9*PI))
   ./t-pika "tan(5*PI/18)*tan(7*PI/18)" -otcollect
 ==> -(1+2*cos(1/9*PI))/(1-2*cos(1/9*PI))
- Le sqrt(3) empeche MAY de recoller les morceaux ==> A corriger !
+ The sqrt(3) prevents to recollect everything.
 
-+ Finir may_sqrtsimp pour que sqrt(30)*sqrt(105) == 15*sqrt(14)
-  Et (7+5*sqrt(2))^(1/3) --> (1+sqrt(2))
-  Et 1/(2^(1/2)+3^(1/2)+6^(1/2)) --> 5/23*sqrt(3)-1/23*sqrt(2)*sqrt(3)+7/23*sqrt(2)-12/23 ??
-  Et 2^(1/4)*(2^(1/2)+2)/(8+6*2^(1/2))^(1/2) --> 1 (Ca a l'air compliquée!!!!)
-  Et (5-2*3^(1/2)*x-2*2^(1/2)*3^(1/2)+2*2^(1/2)*x+x^2)/(1-2*3^(1/2)*x+x^2)
++ Finish may_sqrtsimp For:
+ ==> sqrt(30)*sqrt(105) == 15*sqrt(14)
+ ==> (7+5*sqrt(2))^(1/3) --> (1+sqrt(2))
+ ==>  1/(2^(1/2)+3^(1/2)+6^(1/2)) --> 5/23*sqrt(3)-1/23*sqrt(2)*sqrt(3)+7/23*sqrt(2)-12/23 ??
+ ==>  2^(1/4)*(2^(1/2)+2)/(8+6*2^(1/2))^(1/2) --> 1 (Ca a l'air compliquée!!!!)
+ ==>  (5-2*3^(1/2)*x-2*2^(1/2)*3^(1/2)+2*2^(1/2)*x+x^2)/(1-2*3^(1/2)*x+x^2)
      --> (-sqrt(3)+sqrt(2)+x)/(-sqrt(3)-sqrt(2)+x)
-  Et (19+15*2^(1/3)+12*2^(2/3))^(1/3) --> 1+2^(1/3)+2^(2/3)
+ ==>  (19+15*2^(1/3)+12*2^(2/3))^(1/3) --> 1+2^(1/3)+2^(2/3)
 
-++++++++++++++++++++++++++++++
-++++    Corriger bugs      +++
-++++++++++++++++++++++++++++++
 
-+ may_get_domain devrait etre débuggué.
++++++++++++++++++++++++++
+++++    Fix BUGS      +++
++++++++++++++++++++++++++
 
-+  (real(x)+abs(real(x)))/(real(x)+abs(real(x))) = 1
-   alors que ce n'est pas vrai presque partout...
-   On est quand meme dans la limite.
-   ==> Problème documentaire.
++ may_get_domain is totaly broken.
 
-./t-pika "ceil(log(53+10+3)/log(2.))"
-[MAYLIB]: assertion failed in range.c.302: MAY_TYPE(x)>MAY_ATOMIC_LIMIT && MAY_TYPE(x)<=MAY_END_LIMIT+may_c.extension_size
++ (real(x)+abs(real(x)))/(real(x)+abs(real(x))) ==> 1
+  But it is not true nearly everywhere.
+  ==> To document ?
 
-+ segfault si désactivation de l'overcommit :
-   echo 2 > /proc/sys/vm/overcommit_memory
- make t-charge CFLAGS="-g"
- ==>
- MAY V0.7.5 (GMP V5.0.5 MPFR V3.1.0 CC=gcc CFLAGS=-g)
-Start -- Base:0x6b4000 Top:0x6bc128 Used:33064 MaxUsed:33064 Max:8321503231
-Construct (3*(a*x+b*y+c*z) with a=1/2, b=2/3 and c=4/5...
-Program received signal SIGSEGV, Segmentation fault.
-0x000000000040fd72 in sort_pair (tab=<error reading variable: Cannot access memory at address 0x7ffffffbb268>,
-    size=<error reading variable: Cannot access memory at address 0x7ffffffbb264>) at eval.c:933
-warning: Source file is more recent than executable.
-933	{
-(gdb) bt
-#0  0x000000000040fd72 in sort_pair (tab=<error reading variable: Cannot access memory at address 0x7ffffffbb268>,
-    size=<error reading variable: Cannot access memory at address 0x7ffffffbb264>) at eval.c:933
-#1  0x00000000004113a6 in may_eval_product (x=0x6bc200) at eval.c:1420
-#2  0x000000000040d21b in may_eval (x=0x6bc200) at eval.c:524
-#3  0x000000000040feea in may_eval_sum (x=0x6bc248) at eval.c:1030
-#4  0x000000000040d203 in may_eval (x=0x6bc248) at eval.c:519
-#5  0x0000000000410e7b in may_eval_product (x=0x6bc268) at eval.c:1280
-#6  0x000000000040d21b in may_eval (x=0x6bc268) at eval.c:524
-#7  0x00000000004042e5 in test_construct () at t-charge.c:75
-#8  0x0000000000408360 in main (argc=1, argv=0x7fffffffe4e8) at t-charge.c:1400
-==> Accès erroné aux variables de la pile.
- La fonctionne alloue 260K sur la pile sans en informer l'OS ...
- qui pense que l'on a débordé... d'où seg fault.
- probleme compilo et / ou os...
 
 
 ++++++++++++++++++++++++++++
@@ -194,36 +151,21 @@ warning: Source file is more recent than executable.
 ++++++++++++++++++++++++++++
 
 + ./t-pika "tan(x)/cos(x)^1034" -otcollect
-  ==> Temps très, très long. Calcul d'un monstrueux GCD...
+  ==> Very, very long computation. GCD too big.
 
 + ./t-pika "tan(2+x)" -oseries x 100
-  ==> 2s de calcul alors que par taylor c'est instantannée.
-  ==> Améliorer la multiplication et la composition de série mais ca ne sera pas suffisant.
+  ==> 2s whereas it is instantenous with taylor
 
-+ may_expand peut etre pas tres performant sur certains entrees.
++ may_expand can be improved on some input like
   ==> (1+3*x+2*x^2)^1000
-  ==> Convertir si polynome univariée en entier + gmp ? Borne d'erreur ?
-        Ameliorer les threshold
-  Determiner si le polynome est sparse ou pas ( Sparse <=> Product (Degree Max of var[i]) > (# elems)^2)
 
 + may_eval_sum / may_eval_product:
-  ==> les sommes dans les sommes doivent êetre fusionnées et non pas retriées si possibles.
+  ==> partial sums can be merged.
 
 + may_replace (P(x), x, NUM)
-  Si P est un polynome univarie et NUM aussi, 
-  alors on peut optimiser en cachant NUM^d pour d <= degree de P
-        may_replace_upol (may_t P, may_t x, may_t num)
-                MAY_ASSERT (MAY_TYPE (x) == MAY_STRING_T && MAY_PURENUM_P(num));
-                Appel récursif avec une table de la taille de deg P+1
-                Remplissage de cette table par les valeurs calculées : faire une évaluation binaire et remplir par le haut.
-  Plus général que cela : par exemple, si on a plusieurs occurences de sqrt(x), et qu'on remplace x par un flottant (ou cos...)
-  on va calculer plusieurs fois sqrt(2.3) (x->2.3). Détecter cela et l'optimiser ? Comment ?
-        Créer x = may_compress (x)
-                Parcourt x récursivement et s'il trouve une sous-expression déjà utilisée autre part dans l'expression, il retourne cette dernière.
-                ==> Réduire la taille d'une expression / Améliorer les performances des comparaisons.
-                ==> Permet de n'avoir qu'une sous-expression 'sqrt(x)' dans mon expression.
-        may_replace devrait faire un cache spécifique (avec gestion des exponentiations déjà calculés pour calculer la nouvelle).
-        Cela n'est utile que si on remplace par quelque chose de numérique (autrement ca ne sert pas vraiment).
+  If P is a polynomial and NUM a numerical, 
+  we can optimize by caching some values of NUM^d in the evaluation of the expression for d <= deg(P)
+  Use dedicative function?
 
 + may_div_qr univarie:
   Voir comment on peut faire via évaluation entièere puis remontée heuristique
