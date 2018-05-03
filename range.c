@@ -299,9 +299,12 @@ may_range_mul_scal (may_t dest, may_t r, may_t x)
 	}
       else
 	{
-	  mpfr_mul (LEFT (dest), RIGHT(x), MAY_FLOAT (x), GMP_RNDD);
+	  mpfr_mul (LEFT (dest), RIGHT(r), MAY_FLOAT (x), GMP_RNDD);
 	  mpfr_mul (RIGHT(dest), LEFT (r), MAY_FLOAT (x), GMP_RNDU);
 	}
+      break;
+    default:
+      MAY_ASSERT(0);
       break;
     }
 }
