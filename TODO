@@ -168,124 +168,68 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
   Use dedicative function?
 
 + may_div_qr univarie:
-  Voir comment on peut faire via évaluation entièere puis remontée heuristique
-  Voir aussi comment on peut faire via une évaluation par Newton et une division par les puissances croissantes.
+  See how to do an integer evaluation followed by by a heuristic lift.
+  Or a newton evaluation?
 
-+ may_expand_var/may_collect ne devrait pas développer si possible.
-     Si pas dépendant de x, retourner x
-     Si c'est une somme, collect chacun des éléments de la somme, puis regroupement des degrées identiques.
-     Si c'est un produit, collect chacun des éléments et extraire les éléments indépendants de x des autres.
-        Développer les éléements de x si plus de 2.
-        mul_expand par les éléements indépendants.
-     Si pow et entier, expand (c'est forcément dépendant de x).
++ may_expand_var/may_collect: shall not develop the expression if possible.
+  If not dependend on x, return x.
+  If it is a sum, collect each element of the sum then regroup the same degrees.
+  If it is a product, collect each element and extract the element indepedent of x. Then?
 
 + may_gcd:
-  Hack pour gérer les cas gcd(P^N,Q) sans développer P^N
+  * Handle case gcd(P^N,Q) without expanding P^N
      gcd (P^n, Q^m) =
          . g = 1
          . g' = gcd(P,Q)
-         . tant que g' != 1
-                si n < m :
+         . while g' != 1
+                if n < m :
                    g = g * g' ^n
                    P = P/g'
                    Q = g'
                    m = m - n
-                sinon si n > m
+                else if n > m
                    g = g * g' ^ m
                    Q = Q/g'
                    P = g'
                    n = n - m
-                sinon
+                else
                    g = g * g' ^ n
                    break loop
                 g' = gcd (P, Q)
          . return g
-  Hack: Substituer variable locale s'il existe N entier tel que y n'existe que sous la forme y^N dans les expressions.
-  Hack: réordonner les hacks de telle facon que l'on fasse la décomposition en produit / puissance avant le développement
-  des variables (et dont la détection des variables non utilisées par une expression).
-  Subresultant PRS :
-    - Trier la liste du plus petit degrée au plus grand / taille coefficient de facon à mimiser le GCD pour le PSR.
-    - Inliner la division pour ne plus avoir à faire des convertions inutiles.
-  Heuristic GCD:
-    - Mettre un point d'arrêet à partir duquel on ne calcule plus le GD heuristique.
-    - Prendre en compte tous les arguments pour ne pas avoir à convertir / déconvertir sans arrêt.
-    - Permet de prendre en compte le minimum des maximum de toutes les entrées.
-    - Une passe pour convertir / déconvertir toutes les variables ?
-    - La déconvertion ne doit pas faire la double division entiére pour récupérer le mod et le quotient.
-    - Voir si on ne peut pas évaluer plus faible quitte à échouer plus souvent, et à continuer en cas de succès (qui aura l'avantage
-      de réduire les degréees).
-  GCDMOD: A implanter.
-  Algorithme pour détecter quel algo utilisée en fonction des entréees (degréee total, nombre de variable, degréees partiels, spartivitée, ...),
-
-+ Ajout d'un nouveau type SMALL_INT (=0) :
-        .type  = SMALL_INT
-        .flags = EVAL|NUM|EXPAND
-        .hash  = La valeur petite stockée
-  Permet de passer pour les entiers 16 bits (sur une plateforme 32) de 4+(4+4+4+4+4)=24 octets à 4+4=8 octets.
-  Ne gagne pas autant que de coder directement dans le pointeur même ((long)x&1) == 1 (=4 octets)
-  Mais evite de faire des tests pour vérifier si may_t est bien un pointeur et respecte mieux la norme.
-  Impact suite à intégration d'un nouveau type atomique :
-        may_enum_t:     Ajout du nouveau type en premier.
-        compact_recur1: Ajout du nouveau type.
-        may_get_name:   Retourne may_integer_name pour ce nouveau type.
-        may_eval:       Gestion du nouveau type.
-        may_recompute_hash: Gestion du nouveau type.
-        may_dump_rec:   Gestion du nouveau type.
-        may_length:     Ajout du nouveau type.
-        may_copy_c:     Ajout du nouveau type.
-        may_identical:  Ajout du nouveau type (Si les hash et les types sont égaux, les nombres sont égaux).
-        may_cmp:        Identique may_identical.
-  Impact suite à intégration d'un nouveau type entier:
-        init_num:       Reprendre : les entiers initialisés au démarrage sont des SMALL_INT.
-        may_zero_fastp: Il n'est plus nécessaire de tester si c'est INT_T: SMALL_INT_T suffit.
-        may_* predicate: Integration du nouveau type.
-        may_get_*:      Ajout du nouveau type entier.
-        may_set_*:      Ajout du nouveau type entier (FIXME: Non nécessaire vraiment, mais dommage de ne pas court-circuite le circuit d'évaluation dans ce cas là).
-        may_get_domain: Ajout du nouveau type entier.
-        may_num_*:      Ajout du nouveau type entier.
-        may_mpz_simplify: Simplification du mpz en SMALL_INT s'il rentre dans le hash.
-        evalf:          Ajout du nouveau type entier.
-        may_eval_pow:   Ajout du nouveau type entier.
-        Reprendre toutes les references a MAY_INT_T (#185).
-        Remplacer       MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T par MAY_TYPE (MAY_AT (x, 0)) <= MAY_INT_T
-        Est-ce que le constructeur MAY_INT doit fonctionner avec un SMALL_INT ?
- ==> Evaluer interet réel : le systeme a été amélioré avec bien plus de valeurs entières cachés, ce qui rend l'interet plus limité.
-
+  * Hack: substitute a local variabl if it exists an integer N such as y only exists as a power of N in the expression.
+  * Hack: perform all multiplication and power hack before doing the expand.
+  * Subresultant PRS :
+    - Sort the list from the lower degree to the higher one?
+  * Heuristic GCD:
+     - Put a breakpoint from which we no longer calculate the heuristic GD.
+     - Take into account all the arguments to avoid having to convert / deconvert everytime.
+     - Allows to take into account the minimum of the maximum of all the entries.
+     - A pass to convert / deconvert all variables?
+     - The deconvertion must not make the double division whole to recover the mod and the quotient.
+     - See if we can not evaluate lower quits to fail more often, and continue if successful (who will have the advantage
+       to reduce the degrees).
 
 
 +++++++++++++++++++++++
 ++++    Errors      +++
 +++++++++++++++++++++++
 
-+ Classe: may_catch_c: constructeur may_error_catch (error_throw_handler, NULL);
-                       destructeur  may_error_uncatch ();
-==>
- try {
-  may_catch_c catch;
-   /* Do some computing */
- } catch (may_error_e error_code) {
-  std::cerr << "ERROR reported: " << may_error_what (error_code) << std::endl;
- }
-
-+ Exporter les defaults thrower
 
 
 +++++++++++++++++++++++
 ++++    Autres      +++
 +++++++++++++++++++++++
 
-+ Ajouter le cache (Hash-Table) : regler problemes de coherence.
-+ Pouvoir ajouter de nouveaux operateurs.
-+ Support de l'attribut visibility pour les fonctions internes (http://gcc.gnu.org/wiki/Visibility)
++ Add a cache (Hash-Table) : how to handle the coherency problems?
++ Visibility attribute (http://gcc.gnu.org/wiki/Visibility)
 
 
 ++++++++++++++++++++
 ++++    Doc      +++
 ++++++++++++++++++++
 
-Revoir les requirements de l'alignement.
-Aligner en struct ?
+Alignement restriction?
 
-L'alignement d'un "long" peut etre plus petit que celui d'une structure, je pense que tu veux plutôt "suitably aligned for a struct" (l'alignement de toutes les structures est le meme, donc comme une structure peut contenir un long l'alignement est plus grand).
+Rewrite documentation for may_hold.
 
-Preciser les conditions d'utilisation de may_hold plus finement.
