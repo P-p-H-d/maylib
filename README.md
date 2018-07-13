@@ -1,4 +1,4 @@
-# maylib
+# MAYLIB
 
 MAYLIB is a C library for doing symbolic mathematical calculations.
 It is not a CAS (Computer Algebra System): it doesn't have any
@@ -22,25 +22,22 @@ Here are the steps needed to install the library on Unix systems:
 To build MAYLIB, you first have to install GNU MP
 (version 4.2 or higher) on your computer and MPFR (version 2.1.0 or higher).
 You need GCC (or a compatible compiler) and a make program.
-You have to get [GMP](http://www.gmplib.org/), [MPFR](http://www.mpfr.org/) and [GCC](http://gcc.gnu.org/). Please see their respective documentation to see how to install them.
+You have to get [GMP](http://www.gmplib.org/), [MPFR](http://www.mpfr.org/) and [GCC](http://gcc.gnu.org/).
+Please see their respective documentation to see how to install them.
 
 In the MAYLIB source directory, type:
 
        make
 
-Or if you have not installed GMP and/or MPFR in another directory, type:
+Or if you have not installed GMP and/or MPFR in non-system directory, type:
 
-      make GMP=$GMP_DIR MPFR=$MPFR_DIR
+      make GMP=$GMP_INSTALL_DIR MPFR=$MPFR_INSTALL_DIR
 
 This will compile MAYLIB, and create a library archive file libmay.a.
 
-By default, MAYLIB is built with the assertions turned on,
-which slows down a lot the library (a factor of 3), but is a lot safer.
+By default, MAYLIB is built with the assertions turned on and no optimization,
+which slows down a lot the library, but is a lot safer.
 To have an optimized version, type:
-
-        make CFLAGS="-O2 -fomit-frame-pointer" [GMP=$GMP_DIR MPFR=$MPFR_DIR]
-
-or
 
         make fast [GMP=...]
 
