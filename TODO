@@ -89,7 +89,7 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
 ++++    Amelioration       +++
 ++++++++++++++++++++++++++++++
 
-+ RANGE : Can be an extension.
++ RANGE : Move it as an extension.
   ==> TBC if good idea.
 
 + Add support of MAY_OUT_UNIT_CIRCLE and MAY_IN_UNIT_CIRCLE in the predicate.
@@ -102,7 +102,7 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
     Better algorithm to implement.
 
 + tests:
-    Use separate data file.
+    Use separate data file to store inputs / expected values .
 
 + may_match the pattern '$1*x+$2' over 'x' won't work.
   ==> TBC if needed.
@@ -145,7 +145,6 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
   ==> To document ?
 
 
-
 ++++++++++++++++++++++++++++
 ++++    Performance      +++
 ++++++++++++++++++++++++++++
@@ -156,7 +155,7 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
 + ./t-pika "tan(2+x)" -oseries x 100
   ==> 2s whereas it is instantenous with taylor
 
-+ may_expand can be improved on some input like
++ may_expand can be improved on some sparse input like
   ==> (1+3*x+2*x^2)^1000
 
 + may_eval_sum / may_eval_product:
@@ -202,7 +201,7 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
   * Subresultant PRS :
     - Sort the list from the lower degree to the higher one?
   * Heuristic GCD:
-     - Put a breakpoint from which we no longer calculate the heuristic GD.
+     - Put a limit from which we no longer calculate the heuristic GD.
      - Take into account all the arguments to avoid having to convert / deconvert everytime.
      - Allows to take into account the minimum of the maximum of all the entries.
      - A pass to convert / deconvert all variables?
@@ -218,12 +217,16 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
 
 
 +++++++++++++++++++++++
-++++    Autres      +++
+++++    Others      +++
 +++++++++++++++++++++++
 
 + Add a cache (Hash-Table) : how to handle the coherency problems?
+
 + Visibility attribute (http://gcc.gnu.org/wiki/Visibility)
 
++ Port to M*LIB
+==> Better performance,
+==> Less bugs.
 
 ++++++++++++++++++++
 ++++    Doc      +++
