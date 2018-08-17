@@ -30,11 +30,13 @@ MA 02110-1301, USA. */
 # define may_sum_iterator_next may_sum_iterator_next_internal
 # define may_sum_iterator_end  may_sum_iterator_end_internal
 # define may_sum_iterator_ref  may_sum_iterator_ref_internal
+# define may_sum_iterator_tail may_sum_iterator_tail_internal
 # define may_product_iterator_init may_product_iterator_init_internal
 # define may_product_iterator_next may_product_iterator_next_internal
 # define may_product_iterator_end  may_product_iterator_end_internal
 # define may_product_iterator_end2  may_product_iterator_end2_internal
-# define may_product_iterator_ref  may_product_iterator_ref_internal
+# define may_product_iterator_ref   may_product_iterator_ref_internal
+# define may_product_iterator_tail  may_product_iterator_tail_internal
 # define may_nops may_nops_internal
 # define may_op may_op_internal
 #else
@@ -45,11 +47,13 @@ MA 02110-1301, USA. */
 # undef may_sum_iterator_next
 # undef may_sum_iterator_end
 # undef may_sum_iterator_ref
+# undef may_sum_iterator_tail
 # undef may_product_iterator_init
 # undef may_product_iterator_next
 # undef may_product_iterator_end
 # undef may_product_iterator_end2
 # undef may_product_iterator_ref
+# undef may_product_iterator_tail
 # undef may_nops
 # undef may_op
 #endif
@@ -140,6 +144,16 @@ may_sum_iterator_ref (may_iterator_t it)
   return *MAY_IT_P(it);
 }
 
+MAY_ITERATOR_PROTO may_t
+may_sum_iterator_tail (may_iterator_t it)
+{
+  MAY_ASSERT (MAY_IT_N(it) > 0);
+  if (MAY_IT_N(it) == 1)
+    return *MAY_IT_P (it);
+  else
+    return may_add_vc (MAY_IT_N(it), MAY_IT_P (it));
+}
+
 MAY_ITERATOR_PROTO int
 may_product_p (may_t x)
 {
@@ -219,6 +233,16 @@ may_product_iterator_ref (may_iterator_t it)
 {
   MAY_ASSERT (MAY_IT_N(it) > 0);
   return *MAY_IT_P(it);
+}
+
+MAY_ITERATOR_PROTO may_t
+may_product_iterator_tail (may_iterator_t it)
+{
+  MAY_ASSERT (MAY_IT_N(it) > 0);
+  if (MAY_IT_N(it) == 1)
+    return *MAY_IT_P (it);
+  else
+    return may_mul_vc (MAY_IT_N(it), MAY_IT_P(it));
 }
 
 /* Undef everything except the overloaded functions */

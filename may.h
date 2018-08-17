@@ -359,12 +359,14 @@ extern "C" {
   void      may_sum_iterator_next (may_iterator_t);
   int       may_sum_iterator_end  (may_t *, may_t *, may_iterator_t);
   may_t     may_sum_iterator_ref  (may_iterator_t);
+  may_t     may_sum_iterator_tail  (may_iterator_t);
   int       may_product_p (may_t);
   may_t     may_product_iterator_init (may_iterator_t, may_t);
   void      may_product_iterator_next (may_iterator_t);
   int       may_product_iterator_end  (may_t *, may_t *, may_iterator_t);
   int       may_product_iterator_end2  (may_t *, may_t *, may_iterator_t);
   may_t     may_product_iterator_ref  (may_iterator_t);
+  may_t     may_product_iterator_tail  (may_iterator_t);
 
   /* More advanced predicates functions */
   int       may_compute_sign  (may_t); /* 0 unkwown, 1 = 0, 2 >0, 4 <0 */
