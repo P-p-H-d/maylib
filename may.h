@@ -25,13 +25,14 @@ MA 02110-1301, USA. */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <gmp.h>
 #include <mpfr.h>
 
 #define MAY_MAJOR_VERSION 0
 #define MAY_MINOR_VERSION 7
-#define MAY_PATCHLEVEL_VERSION 5
+#define MAY_PATCHLEVEL_VERSION 6
 
 #if defined (__cplusplus)
 extern "C" {
@@ -360,6 +361,7 @@ extern "C" {
   int       may_sum_iterator_end  (may_t *, may_t *, may_iterator_t);
   may_t     may_sum_iterator_ref  (may_iterator_t);
   may_t     may_sum_iterator_tail  (may_iterator_t);
+  bool      may_sum_extract (may_t *, may_t *, may_t);
   int       may_product_p (may_t);
   may_t     may_product_iterator_init (may_iterator_t, may_t);
   void      may_product_iterator_next (may_iterator_t);
@@ -367,6 +369,7 @@ extern "C" {
   int       may_product_iterator_end2  (may_t *, may_t *, may_iterator_t);
   may_t     may_product_iterator_ref  (may_iterator_t);
   may_t     may_product_iterator_tail  (may_iterator_t);
+  bool      may_product_extract (may_t *, may_t *, may_t);
 
   /* More advanced predicates functions */
   int       may_compute_sign  (may_t); /* 0 unkwown, 1 = 0, 2 >0, 4 <0 */
@@ -500,8 +503,6 @@ extern "C" {
   extern const char may_data_name[];
   extern const char may_attribute_name[];
 
-  /* Handling of multiple arguments of the function in C99 */
-#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) || defined(__GNUC__)
 #define may_compact(...) MAY_2ARGS( __VA_ARGS__, may_compact(__VA_ARGS__), may_compact(__VA_ARGS__),may_compact(__VA_ARGS__),may_compact(may_my_mark,__VA_ARGS__),)
 #define may_compact_v(...) MAY_3ARGS( __VA_ARGS__, may_compact_v(__VA_ARGS__), may_compact_v(__VA_ARGS__),may_compact_v(__VA_ARGS__),may_compact_v(may_my_mark,__VA_ARGS__),)
 #define may_mark(...) MAY_1ARG(MAY_ ## __VA_ARGS__ ##_ONE_VAR, may_mark_t may_my_mark;may_mark(may_my_mark),may_mark(__VA_ARGS__),may_mark(__VA_ARGS__),may_mark(__VA_ARGS__), )
@@ -512,7 +513,6 @@ extern "C" {
 #define MAY_1ARG(...) MAY_2ARGS(__VA_ARGS__)
 #define MAY_2ARGS(a,b,c,d,e,...) e
 #define MAY_3ARGS(a,b,c,d,e,f,...) f
-#endif
 
 #if defined (__cplusplus)
 }

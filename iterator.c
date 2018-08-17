@@ -31,12 +31,14 @@ MA 02110-1301, USA. */
 # define may_sum_iterator_end  may_sum_iterator_end_internal
 # define may_sum_iterator_ref  may_sum_iterator_ref_internal
 # define may_sum_iterator_tail may_sum_iterator_tail_internal
+# define may_sum_extract       may_sum_extract
 # define may_product_iterator_init may_product_iterator_init_internal
 # define may_product_iterator_next may_product_iterator_next_internal
 # define may_product_iterator_end  may_product_iterator_end_internal
 # define may_product_iterator_end2  may_product_iterator_end2_internal
 # define may_product_iterator_ref   may_product_iterator_ref_internal
 # define may_product_iterator_tail  may_product_iterator_tail_internal
+# define may_product_extract        may_product_extract
 # define may_nops may_nops_internal
 # define may_op may_op_internal
 #else
@@ -154,6 +156,22 @@ may_sum_iterator_tail (may_iterator_t it)
     return may_add_vc (MAY_IT_N(it), MAY_IT_P (it));
 }
 
+MAY_ITERATOR_PROTO bool
+may_sum_extract (may_t *a, may_t *b, may_t x)
+{
+  MAY_ASSERT (MAY_EVAL_P (x) && a != NULL && b != NULL);
+  if (MAY_LIKELY (MAY_TYPE (x) == MAY_SUM_T)) {
+    *a = MAY_AT (x, 0);
+    if (MAY_NODE_SIZE (x) == 2) {
+      *b = MAY_AT (x, 1);
+    } else {
+      *b = may_add_vc (MAY_NODE_SIZE (x)-1, MAY_AT_PTR(x, 1));
+    }
+    return true;
+  }
+  return false;
+}
+
 MAY_ITERATOR_PROTO int
 may_product_p (may_t x)
 {
@@ -243,6 +261,26 @@ may_product_iterator_tail (may_iterator_t it)
     return *MAY_IT_P (it);
   else
     return may_mul_vc (MAY_IT_N(it), MAY_IT_P(it));
+}
+
+MAY_ITERATOR_PROTO bool
+may_product_extract (may_t *a, may_t *b, may_t x)
+{
+  MAY_ASSERT (MAY_EVAL_P (x) && a != NULL && b != NULL);
+  if (MAY_LIKELY (MAY_TYPE (x) == MAY_FACTOR_T)) {
+    *a = MAY_AT (x, 0);
+    *b = MAY_AT (x, 1);
+    return true;
+  } else if (MAY_TYPE (x) == MAY_PRODUCT_T) {
+    *a = MAY_AT (x, 0);
+    if (MAY_NODE_SIZE (x) == 2) {
+      *b = MAY_AT (x, 1);
+    } else {
+      *b = may_mul_vc (MAY_NODE_SIZE (x)-1, MAY_AT_PTR(x, 1));
+    }
+    return true;
+  }
+  return false;
 }
 
 /* Undef everything except the overloaded functions */
