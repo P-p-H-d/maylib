@@ -85,24 +85,16 @@ tchebycheff_var (long n, int first_kind, int askabs, may_t arg)
 static may_t
 sin_expand (may_t x)
 {
-  may_iterator_t it;
-  if (may_sum_p(x)) {
-    may_t a, b = may_sum_iterator_init (it, x);
-    if (b == MAY_ZERO) {
-      b = may_sum_iterator_ref(it);
-      may_sum_iterator_next(it);
-    }
-    a = may_sum_iterator_tail(it);
+  may_t a, b;
+  if (may_sum_extract(&a, &b, x)) {
     return may_add_c (may_mul_c (sin_expand (a), cos_expand (b)),
                       may_mul_c (cos_expand (a), sin_expand (b)));
   }
-  if (may_product_p(x)) {
-    may_t num = may_product_iterator_init(it, x);
-    if (num != MAY_ONE
-        && MAY_TYPE (num) == MAY_INT_T
-        && mpz_fits_sshort_p (MAY_INT (num))) {
-      long n = mpz_get_si (MAY_INT (num)), m;
-      may_t arg = may_sin (may_product_iterator_tail(it));
+  if (may_product_extract(&a, &b, x)) {
+    if (MAY_TYPE (a) == MAY_INT_T
+        && mpz_fits_sshort_p (MAY_INT (a))) {
+      long n = mpz_get_si (MAY_INT (a)), m;
+      may_t arg = may_sin (b);
       int first_kind;
       int sign = 0;
       MAY_ASSERT (n != 0);
