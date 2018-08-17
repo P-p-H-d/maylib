@@ -282,6 +282,7 @@ enum may_flags_e { MAY_EVAL_F = 1*64, MAY_NUM_F = 2*64, MAY_ALL_F = 3*64 };
 /************************* Define Header type ***************************/
 #define MAY_NUM_P(x)          ((MAY_FLAGS(x)&MAY_NUM_F) != 0)
 #define MAY_PURENUM_P(x)      (MAY_TYPE(x) < MAY_NUM_LIMIT)
+#define MAY_PUREREAL_P(x)     (MAY_TYPE (x) <= MAY_FLOAT_T)
 #define MAY_EVAL_P(x)         ((MAY_FLAGS(x)&MAY_EVAL_F) != 0)
 #define MAY_ATOMIC_P(x)       (MAY_TYPE(x) < MAY_ATOMIC_LIMIT)
 #define MAY_NODE_P(x)         (MAY_TYPE(x) > MAY_ATOMIC_LIMIT)
@@ -712,7 +713,9 @@ void may_error_setjmp_handler (may_error_e, const char *, const void *);
 
 /********* Define fast predicate macros ********/
 #define MAY_ZERO_P(_x) ((_x) == MAY_ZERO || (MAY_TYPE(_x)==MAY_FLOAT_T && mpfr_zero_p(MAY_FLOAT(_x))))
+#define MAY_FASTZERO_P(_x) ((_x) == MAY_ZERO)
 #define MAY_ONE_P(_x) ((_x) == MAY_ONE || (MAY_TYPE(_x)==MAY_FLOAT_T && !mpfr_nan_p(MAY_FLOAT(_x)) && mpfr_cmp_ui(MAY_FLOAT(_x),1) == 0))
+#define MAY_FASTONE_P(_x) ((_x) == MAY_ONE)
 #define MAY_POS_P(_x)  may_pos_p(_x)
 #define MAY_NEG_P(_x)  may_neg_p(_x)
 #define MAY_INT_P(_x)  (MAY_TYPE(_x) == MAY_INT_T)
