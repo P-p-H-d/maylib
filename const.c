@@ -28,14 +28,14 @@ may_addinc_c (may_t x, may_t y)
   may_size_t sy, sx;
   may_type_t tx = MAY_TYPE (x), ty = MAY_TYPE (y);
 
-  if (MAY_UNLIKELY (y == MAY_ZERO))
+  if (MAY_UNLIKELY (MAY_FASTZERO_P(y)))
     /* Even if x is a reserve, everything is ok since we can reuse its memory */
     return x;
 
   /* If x is numerical */
   else if (MAY_UNLIKELY (tx < MAY_NUM_LIMIT)) {
     /* Check if x is zero */
-    if (MAY_UNLIKELY (x == MAY_ZERO)) {
+    if (MAY_UNLIKELY (MAY_FASTZERO_P(x))) {
       /* If y is a reserve, we have to make a copy of it, since
          we can't use it (and we may reuse the return value).
          We can only reuse x. For example (0+RE_P)*y */
@@ -134,14 +134,14 @@ may_mulinc_c (may_t x, may_t y)
   may_size_t sy, sx;
   may_type_t tx = MAY_TYPE (x), ty = MAY_TYPE (y);
 
-  if (MAY_UNLIKELY (y == MAY_ONE))
+  if (MAY_UNLIKELY (MAY_FASTONE_P(y)))
     /* Even if x is a reserve, everything is ok since we can reuse its memory */
     return x;
 
   /* If x is numerical */
   else if (MAY_UNLIKELY (tx < MAY_NUM_LIMIT)) {
-    /* Check if x is zero */
-    if (MAY_UNLIKELY (x == MAY_ONE)) {
+    /* Check if x is one */
+    if (MAY_UNLIKELY (MAY_FASTONE_P(x))) {
       /* If y is a reserve, we have to make a copy of it, since
          we can't use it (and we may reuse the return value).
          We can only reuse x. For example (1*RE_P)+2 */
@@ -244,11 +244,12 @@ may_add_c (may_t x, may_t y)
 {
   may_t z;
 
-  if (MAY_UNLIKELY(x == MAY_ZERO))
+  if (MAY_UNLIKELY(MAY_FASTZERO_P(x)))
     return y;
-  else if (MAY_UNLIKELY(y == MAY_ZERO))
+  if (MAY_UNLIKELY(MAY_FASTZERO_P(y)))
     return x;
-  else if (MAY_TYPE (x) != MAY_SUM_T) {
+
+  if (MAY_TYPE (x) != MAY_SUM_T) {
     if (MAY_TYPE (y) != MAY_SUM_T) {
       z = MAY_NODE_C (MAY_SUM_T, 2);
       MAY_SET_AT (z, 0, x);
@@ -281,11 +282,12 @@ may_mul_c (may_t x, may_t y)
 {
   may_t z;
 
-  if (MAY_UNLIKELY(x == MAY_ONE))
+  if (MAY_UNLIKELY(MAY_FASTONE_P(x)))
     return y;
-  else if (MAY_UNLIKELY(y == MAY_ONE))
+  if (MAY_UNLIKELY(MAY_FASTONE_P(y)))
     return x;
-  else if (MAY_TYPE (x) != MAY_PRODUCT_T && MAY_TYPE (x) != MAY_FACTOR_T && MAY_TYPE (x) != MAY_PRODUCT_RESERVE_T) {
+  
+  if (MAY_TYPE (x) != MAY_PRODUCT_T && MAY_TYPE (x) != MAY_FACTOR_T && MAY_TYPE (x) != MAY_PRODUCT_RESERVE_T) {
     if (MAY_TYPE (y) != MAY_PRODUCT_T && MAY_TYPE (y) != MAY_FACTOR_T && MAY_TYPE (y) != MAY_PRODUCT_RESERVE_T) {
       z = MAY_NODE_C (MAY_PRODUCT_T, 2);
       MAY_SET_AT (z, 0, x);
@@ -316,9 +318,7 @@ may_mul_c (may_t x, may_t y)
 may_t
 may_sub_c (may_t x, may_t y)
 {
-  may_t z, s;
-
-  if (MAY_UNLIKELY(y == MAY_ZERO))
+  if (MAY_UNLIKELY(MAY_FASTZERO_P(y)))
     return x;
 
   /* If both are purenum, it is faster to compute them
@@ -327,12 +327,12 @@ may_sub_c (may_t x, may_t y)
   if (MAY_PURENUM_P (x) && MAY_PURENUM_P (y))
     return may_num_sub (MAY_DUMMY, x, y);
 
-  s = MAY_NODE_C (MAY_PRODUCT_T, 2);
+  may_t s = MAY_NODE_C (MAY_PRODUCT_T, 2);
   MAY_SET_AT(s, 0, MAY_MPZ_NOCOPY_C (MAY_INT (MAY_N_ONE)));
   MAY_SET_AT(s, 1, y);
-  if (MAY_UNLIKELY(x == MAY_ZERO))
+  if (MAY_UNLIKELY(MAY_FASTZERO_P(x)))
     return s;
-  z = MAY_NODE_C (MAY_SUM_T, 2);
+  may_t z = MAY_NODE_C (MAY_SUM_T, 2);
   MAY_SET_AT(z, 0, x);
   MAY_SET_AT(z, 1, s);
   return z;
@@ -341,9 +341,10 @@ may_sub_c (may_t x, may_t y)
 may_t
 may_neg_c (may_t x)
 {
-  may_t s;
-
-  s = MAY_NODE_C (MAY_PRODUCT_T, 2);
+  if (MAY_UNLIKELY(MAY_FASTZERO_P(x)))
+    return x;
+  
+  may_t s = MAY_NODE_C (MAY_PRODUCT_T, 2);
   MAY_SET_AT(s, 0, MAY_MPZ_NOCOPY_C (MAY_INT (MAY_N_ONE)));
   MAY_SET_AT(s, 1, x);
   return s;
@@ -352,10 +353,7 @@ may_neg_c (may_t x)
 may_t
 may_div_c (may_t x, may_t y)
 {
-  may_t s;
-
-  /* Handle easy cases */
-  if (MAY_UNLIKELY (y == MAY_ONE))
+  if (MAY_UNLIKELY (MAY_FASTONE_P(y)))
     return x;
 
   /* If both are purenum, it is faster to compute them
@@ -364,10 +362,10 @@ may_div_c (may_t x, may_t y)
   if (MAY_PURENUM_P (x) && MAY_PURENUM_P (y))
     return may_num_div (MAY_DUMMY, x, y);
 
-  s = MAY_NODE_C (MAY_POW_T, 2);
+  may_t s = MAY_NODE_C (MAY_POW_T, 2);
   MAY_SET_AT(s, 0, y);
   MAY_SET_AT(s, 1, MAY_N_ONE);
-  if (MAY_UNLIKELY(x == MAY_ONE))
+  if (MAY_UNLIKELY(MAY_FASTONE_P(x)))
     return s;
   return may_mul_c (x, s);
 }
@@ -375,8 +373,7 @@ may_div_c (may_t x, may_t y)
 static MAY_REGPARM may_t
 may_binary_ifunc_c (may_t x, may_t y, may_type_t type)
 {
-  may_t z;
-  z = MAY_NODE_C (type, 2);
+  may_t z = MAY_NODE_C (type, 2);
   MAY_SET_AT (z, 0, x);
   MAY_SET_AT (z, 1, y);
   return z;
@@ -385,7 +382,7 @@ may_binary_ifunc_c (may_t x, may_t y, may_type_t type)
 may_t
 may_pow_c (may_t x,  may_t y)
 {
-  if (MAY_UNLIKELY (y == MAY_ONE))
+  if (MAY_UNLIKELY (MAY_FASTONE_P(y)))
     return x;
   return may_binary_ifunc_c (x, y, MAY_POW_T);
 }
@@ -401,26 +398,21 @@ may_pow_si_c (may_t x,  long y)
 may_t
 may_addmul_vc (size_t size, const may_pair_t *tab)
 {
-  may_size_t i;
-  may_t y;
-
   if (MAY_UNLIKELY (size == 0))
     return MAY_ZERO;
-  y = MAY_NODE_C (MAY_SUM_T, size);
-  for (i = 0; MAY_LIKELY (i < size); i++)
+  may_t y = MAY_NODE_C (MAY_SUM_T, size);
+  for (may_size_t i = 0; MAY_LIKELY (i < size); i++)
     MAY_SET_AT (y, i, may_mul_c (tab[i].first, tab[i].second));
   return y;
 }
+
 may_t
 may_mulpow_vc (size_t size, const may_pair_t *tab)
 {
-  may_size_t i;
-  may_t y;
-
   if (MAY_UNLIKELY (size == 0))
     return MAY_ONE;
-  y = MAY_NODE_C (MAY_PRODUCT_T, size);
-  for (i = 0; MAY_LIKELY (i < size); i++)
+  may_t y = MAY_NODE_C (MAY_PRODUCT_T, size);
+  for (may_size_t i = 0; MAY_LIKELY (i < size); i++)
     MAY_SET_AT (y, i, may_pow_c (tab[i].second, tab[i].first));
   return y;
 }
@@ -428,7 +420,10 @@ may_mulpow_vc (size_t size, const may_pair_t *tab)
 may_t
 may_sqr_c (may_t x)
 {
-  return may_binary_ifunc_c (x, MAY_TWO, MAY_POW_T);
+  if (MAY_FASTZERO_P(x) || MAY_FASTONE_P(x))
+    return x;
+  else
+    return may_binary_ifunc_c (x, MAY_TWO, MAY_POW_T);
 }
 
 may_t
@@ -461,31 +456,46 @@ may_unary_ifunc_c (may_t x, may_type_t type)
 may_t
 may_exp_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_EXP_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ONE;
+  else
+    return may_unary_ifunc_c (x, MAY_EXP_T);
 }
 
 may_t
 may_log_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_LOG_T);
+  if (MAY_ONE_P(x))
+    return MAY_ZERO;
+  else
+    return may_unary_ifunc_c (x, MAY_LOG_T);
 }
 
 may_t
 may_sin_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_SIN_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ZERO;
+  else
+    return may_unary_ifunc_c (x, MAY_SIN_T);
 }
 
 may_t
 may_cos_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_COS_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ONE;
+  else
+    return may_unary_ifunc_c (x, MAY_COS_T);
 }
 
 may_t
 may_tan_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_TAN_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ZERO;
+  else
+    return may_unary_ifunc_c (x, MAY_TAN_T);
 }
 
 may_t
@@ -509,19 +519,28 @@ may_atan_c (may_t x)
 may_t
 may_sinh_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_SINH_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ZERO;
+  else
+    return may_unary_ifunc_c (x, MAY_SINH_T);
 }
 
 may_t
 may_cosh_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_COSH_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ONE;
+  else
+    return may_unary_ifunc_c (x, MAY_COSH_T);
 }
 
 may_t
 may_tanh_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_TANH_T);
+  if (MAY_FASTZERO_P(x))
+    return MAY_ZERO;
+  else
+    return may_unary_ifunc_c (x, MAY_TANH_T);
 }
 
 may_t
@@ -572,13 +591,19 @@ may_conj_c (may_t x)
 may_t
 may_real_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_REAL_T);
+  if (MAY_PUREREAL_P(x))
+    return x;
+  else
+    return may_unary_ifunc_c (x, MAY_REAL_T);
 }
 
 may_t
 may_imag_c (may_t x)
 {
-  return may_unary_ifunc_c (x, MAY_IMAG_T);
+  if (MAY_PUREREAL_P(x))
+    return MAY_ZERO;
+  else
+    return may_unary_ifunc_c (x, MAY_IMAG_T);
 }
 
 may_t
@@ -608,7 +633,10 @@ may_fact_c (may_t x)
 may_t
 may_ceil_c (may_t x)
 {
-  return may_neg_c (may_floor_c (may_neg_c (x)));
+  if (MAY_INT_P (x))
+    return x;
+  else
+    return may_neg_c (may_floor_c (may_neg_c (x)));
 }
 
 static may_t
@@ -694,9 +722,8 @@ may_func_domain_c (const char name[], may_t x, may_domain_e domain)
     {may_tan_name,   may_tan_c},
     {may_tanh_name,  may_tanh_c} };
   may_t z;
-  size_t start, end;
-  start = 0;
-  end   = numberof (FuncTab);
+  size_t start = 0;
+  size_t end   = numberof (FuncTab);
   while (start < end) {
     size_t pos = (start+end)/2;
     int ret = strcmp (name, FuncTab[pos].name);
@@ -771,10 +798,9 @@ may_t
 may_mul_vac (may_t x, ...)
 {
   va_list arg;
-  may_t y;
 
   va_start (arg, x);
-  y = handle_va_list (MAY_PRODUCT_T, x, arg);
+  may_t y = handle_va_list (MAY_PRODUCT_T, x, arg);
   va_end (arg);
   return y;
 }
@@ -782,11 +808,8 @@ may_mul_vac (may_t x, ...)
 may_t
 may_list_vc (size_t size, const may_t *tab)
 {
-  may_size_t i;
-  may_t y;
-
-  y = MAY_NODE_C (MAY_LIST_T, size);
-  for (i = 0 ; MAY_LIKELY (i < size); i++)
+  may_t y = MAY_NODE_C (MAY_LIST_T, size);
+  for (may_size_t i = 0 ; MAY_LIKELY (i < size); i++)
     MAY_SET_AT (y, i, tab[i]);
   return y;
 }
@@ -794,13 +817,10 @@ may_list_vc (size_t size, const may_t *tab)
 may_t
 may_add_vc (size_t size, const may_t *tab)
 {
-  may_size_t i;
-  may_t y;
-
   if (MAY_UNLIKELY (size == 0))
     return MAY_ZERO;
-  y = MAY_NODE_C (MAY_SUM_T, size);
-  for (i = 0; MAY_LIKELY (i < size); i++)
+  may_t y = MAY_NODE_C (MAY_SUM_T, size);
+  for (may_size_t i = 0; MAY_LIKELY (i < size); i++)
     MAY_SET_AT (y, i, tab[i]);
   return y;
 }
@@ -808,13 +828,10 @@ may_add_vc (size_t size, const may_t *tab)
 may_t
 may_mul_vc (size_t size, const may_t *tab)
 {
-  may_size_t i;
-  may_t y;
-
   if (MAY_UNLIKELY (size == 0))
     return MAY_ONE;
-  y = MAY_NODE_C (MAY_PRODUCT_T, size);
-  for (i = 0 ; MAY_LIKELY (i < size); i++)
+  may_t y = MAY_NODE_C (MAY_PRODUCT_T, size);
+  for (may_size_t i = 0 ; MAY_LIKELY (i < size); i++)
     MAY_SET_AT (y, i, tab[i]);
   return y;
 }
