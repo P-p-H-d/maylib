@@ -80,46 +80,56 @@ tchebycheff_var (long n, int first_kind, int askabs, may_t arg)
 }
 
 
-/* Expand sin */
+/* Expand sin:
+   - sin(A+B)=sin(A)*cos(B) + cos(A)*sin(B) */
 static may_t
 sin_expand (may_t x)
 {
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_t first  = MAY_AT (x, 0);
-    may_t last   = may_eval (may_add_vc (MAY_NODE_SIZE(x)-1, MAY_AT_PTR (x, 1)));
-    return may_add_c (may_mul_c (sin_expand (first), cos_expand (last)),
-                      may_mul_c (cos_expand (first), sin_expand (last)));
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T
-             && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
-             && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
-    long n = mpz_get_si (MAY_INT (MAY_AT (x, 0))), m;
-    may_t arg = may_sin (MAY_AT (x, 1));
-    int first_kind;
-    int sign = 0;
-    MAY_ASSERT (n != 0);
-    if (n < 0) {
-      sign = 1;
-      n = -n;
+  may_iterator_t it;
+  if (may_sum_p(x)) {
+    may_t a, b = may_sum_iterator_init (it, x);
+    if (b == MAY_ZERO) {
+      b = may_sum_iterator_ref(it);
+      may_sum_iterator_next(it);
     }
-    if (MAY_UNLIKELY (n == 1))
-      return may_neg (arg);
-    MAY_ASSERT (n >= 2);
-    if ((n & 1) == 0) {
-      m = n - 1;
-      first_kind = 0;
-    } else {
-      m = n;
-      first_kind = 1;
-    }
-    arg = tchebycheff_var (m, first_kind, 0, arg);
-    if ( (((n+1)&3) <= 1 && sign == 0)
+    a = may_sum_iterator_tail(it);
+    return may_add_c (may_mul_c (sin_expand (a), cos_expand (b)),
+                      may_mul_c (cos_expand (a), sin_expand (b)));
+  }
+  if (may_product_p(x)) {
+    may_t num = may_product_iterator_init(it, x);
+    if (num != MAY_ONE
+        && MAY_TYPE (num) == MAY_INT_T
+        && mpz_fits_sshort_p (MAY_INT (num))) {
+      long n = mpz_get_si (MAY_INT (num)), m;
+      may_t arg = may_sin (may_product_iterator_tail(it));
+      int first_kind;
+      int sign = 0;
+      MAY_ASSERT (n != 0);
+      if (n < 0) {
+        sign = 1;
+        n = -n;
+      }
+      if (MAY_UNLIKELY (n == 1))
+        return may_neg (arg);
+      MAY_ASSERT (n >= 2);
+      if ((n & 1) == 0) {
+        m = n - 1;
+        first_kind = 0;
+      } else {
+        m = n;
+        first_kind = 1;
+      }
+      arg = tchebycheff_var (m, first_kind, 0, arg);
+      if ( (((n+1)&3) <= 1 && sign == 0)
          || (((n+1)&3) >= 2 && sign == 1))
-      arg = may_neg_c (arg);
-    if ( (n&1) == 0)
-      arg = may_mul_c (arg, may_cos_c (MAY_AT (x, 1)));
-    return may_eval (arg);
-  } else
-    return may_sin_c (x);
+        arg = may_neg_c (arg);
+      if ( (n&1) == 0)
+        arg = may_mul_c (arg, may_cos_c (MAY_AT (x, 1)));
+      return may_eval (arg);
+    }
+  }
+  return may_sin_c (x);
 }
 
 /* Expand cos */
@@ -271,16 +281,13 @@ static const void *const texpand_func[] = {
 may_t
 may_texpand (may_t x)
 {
-  may_t y;
-
   MAY_ASSERT (MAY_EVAL_P (x));
   MAY_ASSERT (numberof (texpand_name) == numberof (texpand_func));
-
   MAY_LOG_FUNC (("%Y", x));
 
   MAY_RECORD ();
-  y = may_subs_c (x, 1, numberof (texpand_name),
-                  texpand_name, texpand_func);
+  may_t y = may_subs_c (x, 1, numberof (texpand_name),
+                        texpand_name, texpand_func);
   MAY_RET_EVAL (y);
 }
 
