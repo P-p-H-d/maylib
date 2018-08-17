@@ -276,6 +276,7 @@ may_product_extract (may_t *a, may_t *b, may_t x)
     if (MAY_NODE_SIZE (x) == 2) {
       *b = MAY_AT (x, 1);
     } else {
+      // TBC: Evaluated or not?
       *b = may_mul_vc (MAY_NODE_SIZE (x)-1, MAY_AT_PTR(x, 1));
     }
     return true;

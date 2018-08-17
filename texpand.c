@@ -128,23 +128,23 @@ sin_expand (may_t x)
 static may_t
 cos_expand (may_t x)
 {
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_t first  = MAY_AT (x, 0);
-    may_t last   = may_eval (may_add_vc (MAY_NODE_SIZE(x)-1, MAY_AT_PTR (x, 1)));
-    return may_sub_c (may_mul_c (cos_expand (first), cos_expand (last)),
-                      may_mul_c (sin_expand (first), sin_expand (last)));
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T
-             && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
-             && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
-    long n = labs (mpz_get_si (MAY_INT (MAY_AT (x, 0))));
-    may_t arg = may_cos (MAY_AT (x, 1));
+  may_t a, b;
+  if (may_sum_extract(&a, &b, x)) {
+    return may_sub_c (may_mul_c (cos_expand (a), cos_expand (b)),
+                      may_mul_c (sin_expand (a), sin_expand (b)));
+  }
+  if (may_product_extract(&a, &b, x)
+      && MAY_TYPE (a) == MAY_INT_T
+      && mpz_fits_sshort_p (MAY_INT (a))) {
+    long n = labs (mpz_get_si (MAY_INT (a)));
+    may_t arg = may_cos (b);
     if (MAY_UNLIKELY (n == 1))
       return arg;
     MAY_ASSERT (n >= 2);
     arg = tchebycheff_var (n, 1, 0, arg);
     return may_eval (arg);
-  } else
-    return may_cos_c (x);
+  }
+  return may_cos_c (x);
 }
 
 /* Hyperbolic functions are nearly identical */
@@ -154,16 +154,16 @@ cos_expand (may_t x)
 static may_t
 sinh_expand (may_t x)
 {
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_t first  = MAY_AT (x, 0);
-    may_t last   = may_eval (may_add_vc (MAY_NODE_SIZE(x)-1, MAY_AT_PTR (x, 1)));
-    return may_add_c (may_mul_c (sinh_expand (first), cosh_expand (last)),
-                      may_mul_c (cosh_expand (first), sinh_expand (last)));
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T
-             && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
-             && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
-    long n = mpz_get_si (MAY_INT (MAY_AT (x, 0))), m;
-    may_t arg = may_sinh (MAY_AT (x, 1));
+  may_t a, b;
+  if (may_sum_extract(&a, &b, x)) {
+    return may_add_c (may_mul_c (sinh_expand (a), cosh_expand (b)),
+                      may_mul_c (cosh_expand (a), sinh_expand (b)));
+  }
+  if (may_product_extract(&a, &b, x)
+      && MAY_TYPE (a) == MAY_INT_T
+      && mpz_fits_sshort_p (MAY_INT (a))) {
+    long n = mpz_get_si (MAY_INT (a)), m;
+    may_t arg = may_sinh (b);
     int first_kind;
     int sign = 0;
     MAY_ASSERT (n != 0);
@@ -187,8 +187,8 @@ sinh_expand (may_t x)
     if ( (n&1) == 0)
       arg = may_mul_c (arg, may_cosh_c (MAY_AT (x, 1)));
     return may_eval (arg);
-  } else
-    return may_sinh_c (x);
+  }
+  return may_sinh_c (x);
 }
 
 /* It is identical to cos_expand except that
@@ -196,35 +196,37 @@ sinh_expand (may_t x)
 static may_t
 cosh_expand (may_t x)
 {
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_t first  = MAY_AT (x, 0);
-    may_t last   = may_eval (may_add_vc (MAY_NODE_SIZE(x)-1, MAY_AT_PTR (x, 1)));
-    return may_add_c (may_mul_c (cosh_expand (first), cosh_expand (last)),
-                      may_mul_c (sinh_expand (first), sinh_expand (last)));
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T
-             && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
-             && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
-    long n = labs (mpz_get_si (MAY_INT (MAY_AT (x, 0))));
-    may_t arg = may_cosh (MAY_AT (x, 1));
+  may_t a, b;
+  if (may_sum_extract(&a, &b, x)) {
+    return may_add_c (may_mul_c (cosh_expand (a), cosh_expand (b)),
+                      may_mul_c (sinh_expand (a), sinh_expand (b)));
+  }
+  if (may_product_extract(&a, &b, x)
+      && MAY_TYPE (a) == MAY_INT_T
+      && mpz_fits_sshort_p (MAY_INT (a))) {
+    long n = labs (mpz_get_si (MAY_INT (a)));
+    may_t arg = may_cosh (b);
     if (MAY_UNLIKELY (n == 1))
       return arg;
     MAY_ASSERT (n >= 2);
     arg = tchebycheff_var (n, 1, 0, arg);
     return may_eval (arg);
-  } else
-    return may_cosh_c (x);
+  }
+  return may_cosh_c (x);
 }
 
 static may_t
 tan_expand (may_t x)
 {
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_t first  = tan_expand (MAY_AT (x, 0));
-    may_t last   = tan_expand (may_eval (may_add_vc (MAY_NODE_SIZE(x)-1, MAY_AT_PTR (x, 1))));
+  may_t a, b;
+  if (may_sum_extract(&a, &b, x)) {
+    may_t first  = tan_expand (may_eval (a));
+    may_t last   = tan_expand (may_eval (b));
     return may_div_c (may_add_c (first, last), may_sub_c (MAY_ONE,may_mul_c (first, last)));
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T
-             && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
-             && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
+  }
+  if (may_product_extract(&a, &b, x)
+      && MAY_TYPE (a) == MAY_INT_T
+      && mpz_fits_sshort_p (MAY_INT (a))) {
     /* Pure lazyness */
     may_t g = may_eval (may_div_c (sin_expand (x), cos_expand (x)));
     g = may_sin2tancos (g);
@@ -232,22 +234,23 @@ tan_expand (may_t x)
                      may_parse_str ("cos($1)^$2"),
                      may_parse_str ("(1+tan($1)^2)^(-$2/2)"));
     return g;
-  } else
-    return may_tan (x);
-
+  }
+  return may_tan_c (x);
 }
 
 
 static may_t
 tanh_expand (may_t x)
 {
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_t first  = tanh_expand (MAY_AT (x, 0));
-    may_t last   = tanh_expand (may_eval (may_add_vc (MAY_NODE_SIZE(x)-1, MAY_AT_PTR (x, 1))));
+  may_t a, b;
+  if (may_sum_extract(&a, &b, x)) {
+    may_t first  = tanh_expand (may_eval(a));
+    may_t last   = tanh_expand (may_eval(b));
     return may_div_c (may_add_c (first, last), may_add_c (MAY_ONE,may_mul_c (first, last)));
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T
-             && MAY_TYPE (MAY_AT (x, 0)) == MAY_INT_T
-             && mpz_fits_sshort_p (MAY_INT (MAY_AT (x, 0)))) {
+  }
+  if (may_product_extract(&a, &b, x)
+      && MAY_TYPE (a) == MAY_INT_T
+      && mpz_fits_sshort_p (MAY_INT (a))) {
     /* Pure lazyness */
     may_t g = may_eval (may_div_c (sinh_expand (x), cosh_expand (x)));
     g = may_sin2tancos (g);
@@ -255,9 +258,8 @@ tanh_expand (may_t x)
                      may_parse_str ("cosh($1)^$2"),
                      may_parse_str ("(1-tanh($1)^2)^(-$2/2)"));
     return g;
-  } else
-    return may_tanh (x);
-
+  }
+  return may_tanh (x);
 }
 
 static const char *const texpand_name[] = {
@@ -277,10 +279,10 @@ may_texpand (may_t x)
   MAY_ASSERT (numberof (texpand_name) == numberof (texpand_func));
   MAY_LOG_FUNC (("%Y", x));
 
-  MAY_RECORD ();
+  may_mark();
   may_t y = may_subs_c (x, 1, numberof (texpand_name),
                         texpand_name, texpand_func);
-  MAY_RET_EVAL (y);
+  return may_keep (may_eval (y));
 }
 
 
@@ -316,15 +318,12 @@ static const void *const eexpand_func[] = {
 may_t
 may_eexpand (may_t x)
 {
-  may_t y;
-
   MAY_ASSERT (MAY_EVAL_P (x));
   MAY_ASSERT (numberof (eexpand_name) == numberof (eexpand_func));
-
   MAY_LOG_FUNC (("%Y", x));
 
-  MAY_RECORD ();
-  y = may_subs_c (x, 1, numberof (eexpand_name),
-                  eexpand_name, eexpand_func);
-  MAY_RET_EVAL (y);
+  may_mark();
+  may_t y = may_subs_c (x, 1, numberof (eexpand_name),
+                        eexpand_name, eexpand_func);
+  return may_keep (may_eval(y));
 }
