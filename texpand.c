@@ -290,16 +290,18 @@ may_texpand (may_t x)
 static may_t
 exp_expand (may_t x)
 {
-  may_t y;
-  if (MAY_TYPE (x) == MAY_SUM_T) {
-    may_size_t i, n = MAY_NODE_SIZE(x);
-    y = MAY_NODE_C (MAY_PRODUCT_T, n);
-    for (i = 0 ; i < n; i++)
-      MAY_SET_AT (y, i, exp_expand (MAY_AT (x, i)));
-    return may_eval (y);
-  } else if (MAY_TYPE (x) == MAY_FACTOR_T) {
-    y = may_pow_c (exp_expand (MAY_AT (x, 1)), MAY_AT (x, 0));
-  } else if (MAY_PURENUM_P (x) && may_num_neg_p (x)) {
+  may_t y, a, b;
+  if (may_sum_p (x)) {
+    may_iterator_t it;
+    y = may_sum_iterator_init(it, x);
+    y = exp_expand(y);
+    while (may_sum_iterator_end(&a, &b, it)) {
+      y = may_mulinc_c (y, may_pow_c (exp_expand (b), a));
+      may_sum_iterator_next(it);
+    }
+  } else if (may_product_extract(&a, &b, x) && MAY_INT_P (a)) {
+    y = may_pow_c (exp_expand (b), a);
+  } else if (may_purenum_p (x) && may_num_neg_p (x)) {
     y = may_pow_c (may_exp_c (may_num_abs (MAY_DUMMY, x)), MAY_N_ONE);
   } else
     y = may_exp_c (x);
