@@ -1,5 +1,5 @@
 /* This file is part of the MAYLIB libray.
-   Copyright 2007-2009 Patrick Pelissier
+   Copyright 2007-2018 Patrick Pelissier
 
 This Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
