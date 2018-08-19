@@ -36,10 +36,9 @@ may_smod (may_t a, may_t b)
 {
   MAY_ASSERT (MAY_TYPE (b) == MAY_INT_T);
   MAY_ASSERT (MAY_EVAL_P (a) && MAY_EVAL_P(b));
-
   MAY_LOG_FUNC (("a='%Y' b='%Y'", a, b));
 
-  if (MAY_UNLIKELY (b == MAY_ZERO || b == MAY_ONE))
+  if (MAY_UNLIKELY (MAY_FASTZERO_P(b) || MAY_FASTONE_P(b)))
     return MAY_ZERO;
 
   may_mark();

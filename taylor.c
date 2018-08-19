@@ -31,7 +31,6 @@ may_taylor (may_t f, may_t x, may_t a, unsigned long m)
 
   MAY_ASSERT (MAY_EVAL_P (f) && MAY_EVAL_P (x) && MAY_EVAL_P (a));
   MAY_ASSERT (MAY_TYPE (x) == MAY_STRING_T);
-
   MAY_LOG_FUNC (("f='%Y' x='%Y' a='%Y' m=%lu", f, x, a, m));
 
   may_mark ();
