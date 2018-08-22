@@ -86,15 +86,15 @@ isqrt_p (may_t x)
   return ret;
 }
 
-/* Compute sqrt(A+sqrt(B)) */
+/* Compute sqrt(sum=A+sqrt(B)) */
 static may_t
 compute_sqrt_of_sum_of_sqrt (may_t sum)
 {
   mpz_t x, y, z, a, b;
-  may_t ret;
+  may_t ret, ap, bp;
   int neg = 0;
 
-  MAY_ASSERT (MAY_TYPE (sum) == MAY_SUM_T);
+  MAY_ASSERT (may_sum_p (sum));
   MAY_ASSERT (MAY_NODE_SIZE(sum) == 2);
   MAY_ASSERT (MAY_NUM_P (sum));
   MAY_ASSERT (MAY_EVAL_P (sum));
@@ -102,39 +102,27 @@ compute_sqrt_of_sum_of_sqrt (may_t sum)
   MAY_RECORD ();
   /* INT+sqrt(INT), INT+INT*sqrt(INT), sqrt(INT)+INT or INT*sqrt(INT)+INT */
   /* Extract A & B */
-  if (MAY_TYPE (MAY_AT (sum, 0)) == MAY_INT_T) {
-    mpz_init_set (a, MAY_INT (MAY_AT (sum, 0)));
-    if (isqrt_p (MAY_AT (sum, 1))) {
-      mpz_init_set (b, MAY_INT (MAY_AT (MAY_AT (sum, 1), 0)));
-    } else if (MAY_TYPE (MAY_AT (sum, 1)) == MAY_FACTOR_T
-               && MAY_TYPE (MAY_AT (MAY_AT (sum, 1), 0)) == MAY_INT_T
-               && isqrt_p (MAY_AT (MAY_AT (sum, 1), 1))) {
-      mpz_init_set (b, MAY_INT (MAY_AT (MAY_AT (MAY_AT (sum, 1), 1),0)));
-      mpz_mul (b, b, MAY_INT (MAY_AT (MAY_AT (sum, 1), 0)));
-      mpz_mul (b, b, MAY_INT (MAY_AT (MAY_AT (sum, 1), 0)));
-      neg = mpz_sgn (MAY_INT (MAY_AT (MAY_AT (sum, 1), 0))) < 0;
-    } else {
-      MAY_CLEANUP ();
-      return NULL;
-    }
+  if (!may_sum_extract(&ap, &bp, sum))
+    return NULL;
+  if (!MAY_INT_P(ap))
+    return NULL;
+  mpz_init_set (a, MAY_INT (ap));
+  if (isqrt_p (bp)) {
+    mpz_init_set (b, MAY_INT (MAY_AT (bp, 0)));
+  } else if (MAY_TYPE (bp) == MAY_FACTOR_T
+             && MAY_TYPE (MAY_AT (bp, 0)) == MAY_INT_T
+             && isqrt_p (MAY_AT (bp, 1))) {
+    mpz_init_set (b, MAY_INT (MAY_AT (MAY_AT (bp, 1),0)));
+    mpz_mul (b, b, MAY_INT (MAY_AT (bp, 0)));
+    mpz_mul (b, b, MAY_INT (MAY_AT (bp, 0)));
+    neg = mpz_sgn (MAY_INT (MAY_AT (bp, 0))) < 0;
+  } else {
+    MAY_CLEANUP ();
+    return NULL;
   }
-  MAY_ASSERT (!MAY_PURENUM_P (MAY_AT (sum, 1)));
-  /*  else if (MAY_TYPE (MAY_AT (sum, 1)) == MAY_INT_T) {
-    mpz_init_set (a, MAY_INT (MAY_AT (sum, 1)));
-    if (isqrt_p (MAY_AT (sum, 0))) {
-      mpz_init_set (b, MAY_INT (MAY_AT (MAY_AT (sum, 0), 0)));
-    } else if (MAY_TYPE (MAY_AT (sum, 1)) == MAY_FACTOR_T
-               && MAY_TYPE (MAY_AT (MAY_AT (sum, 0), 0)) == MAY_INT_T
-               && isqrt_p (MAY_AT (MAY_AT (sum, 0), 1))) {
-      mpz_init_set (b, MAY_INT (MAY_AT (MAY_AT (MAY_AT (sum, 0), 1), 0)));
-      mpz_mul (b, b, MAY_INT (MAY_AT (MAY_AT (sum, 0), 0)));
-      mpz_mul (b, b, MAY_INT (MAY_AT (MAY_AT (sum, 0), 0)));
-      neg = mpz_sgn (MAY_INT (MAY_AT (MAY_AT (sum, 0), 0))) < 0;
-    } else {
-      MAY_CLEANUP ();
-      return NULL;
-    }
-    }*/
+  
+  MAY_ASSERT (!MAY_PURENUM_P (bp));
+
   /* Solve the problem */
   mpz_init (x);
   mpz_init (y);
