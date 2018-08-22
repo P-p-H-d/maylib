@@ -27,26 +27,24 @@ may_replace_c (may_t x, may_t old, may_t new)
   if (MAY_UNLIKELY (may_identical (x, old) == 0))
     return new;
   /* Else check if atomic */
-  else if (MAY_ATOMIC_P (x))
+  if (MAY_ATOMIC_P (x))
     return x;
   /* Else go down the tree */
-  else {
-    MAY_RECORD ();
-    may_size_t i, n = MAY_NODE_SIZE(x);
-    may_t y = MAY_NODE_C (MAY_TYPE(x), n);
-    int isnew = 0;
-    for (i = 0; i < n; i++) {
-      may_t zo = MAY_AT (x, i);
-      may_t z = may_replace_c (zo, old, new);
-      isnew |= (z != zo);
-      MAY_SET_AT (y, i, z);
-    }
-    if (isnew)
-      return y;
-    /* Nothing has changed. Return the original 'x' */
-    MAY_CLEANUP ();
-    return x;
- }
+  MAY_RECORD ();
+  may_size_t i, n = MAY_NODE_SIZE(x);
+  may_t y = MAY_NODE_C (MAY_TYPE(x), n);
+  int isnew = 0;
+  for (i = 0; i < n; i++) {
+    may_t zo = MAY_AT (x, i);
+    may_t z = may_replace_c (zo, old, new);
+    isnew |= (z != zo);
+    MAY_SET_AT (y, i, z);
+  }
+  if (isnew)
+    return y;
+  /* Nothing has changed. Return the original 'x' */
+  MAY_CLEANUP ();
+  return x;
 }
 
 may_t
@@ -54,6 +52,7 @@ may_replace (may_t x, may_t old, may_t new)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (old) && MAY_EVAL_P (new));
   MAY_LOG_FUNC (("x='%Y' old='%Y' new='%Y'", x, old, new));
+
   /* Check case where there is no change */
   if (MAY_UNLIKELY (may_identical (old, new) == 0))
     return x;
@@ -70,20 +69,15 @@ may_replace_upol_c (may_t x, may_t old, may_t new)
   if (MAY_UNLIKELY (may_identical (x, old) == 0))
     return new;
   /* Else check if atomic */
-  else if (MAY_NODE_P (x)) {
+  if (MAY_NODE_P (x)) {
     /* Else go down the tree */
     if (MAY_TYPE (x) == MAY_POW_T) {
       may_t op0 = MAY_AT (x, 0);
       may_t base = may_replace_upol_c (op0, old, new);
       if (base != op0) {
-        may_t y = MAY_NODE_C (MAY_POW_T, 2);
-        MAY_SET_AT (y, 0, base);
-        MAY_SET_AT (y, 1, MAY_AT (x, 1));
-        return y;
+        return may_pow_c (base, MAY_AT (x, 1));
       }
-    } else if (MAY_TYPE (x) == MAY_SUM_T
-               || MAY_TYPE (x) == MAY_FACTOR_T
-               || MAY_TYPE (x) == MAY_PRODUCT_T) {
+    } else if (may_sum_p(x) || may_product_p(x)) {
       MAY_RECORD ();
       may_size_t i, n = MAY_NODE_SIZE(x);
       may_t y = MAY_NODE_C (MAY_TYPE(x), n);
@@ -96,7 +90,7 @@ may_replace_upol_c (may_t x, may_t old, may_t new)
       }
       if (isnew)
         return y;
-      /* Nothing has changed. Return the original 'x' */
+      /* Nothing has changed. Cleanup memory & return the original 'x' */
       MAY_CLEANUP ();
     }
   }
@@ -108,6 +102,7 @@ may_replace_upol (may_t x, may_t old, may_t new)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (old) && MAY_EVAL_P (new));
   MAY_LOG_FUNC (("x='%Y' old='%Y' new='%Y'", x, old, new));
+
   /* Check case where there is no change */
   if (MAY_UNLIKELY (may_identical (old, new) == 0))
     return x;
