@@ -62,9 +62,8 @@ check-sanitize:
 	@echo "Starting tests with Thread sanitize..." && ./t-test && echo "All tests passed"
 
 # Run under Clang static analyser
-# (Doesn't work directly).
 clang-static-analyser:
-	scan-build -v make CC=/usr/share/clang/scan-build/ccc-analyzer
+	scan-build -v make
 
 # Run a benchmark.
 charge: fast t-charge
