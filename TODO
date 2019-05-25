@@ -144,7 +144,11 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
   But it is not true nearly everywhere.
   ==> To document ?
 
-
++ ./t-eval "(1+x^2+y^3+z^4)^17*(1-x^2+y-z)^15" -oexpand -ogcd  "(1+x^2+y^3+z^4)^12*(1-x^2+y-z)^11"
+ Wrong result
+ Result shall be the expanded version of (1+x^2+y^3+z^4)^12*(1-x^2+y-z)^11
+ It is not.
+ 
 ++++++++++++++++++++++++++++
 ++++    Performance      +++
 ++++++++++++++++++++++++++++
