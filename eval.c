@@ -752,6 +752,8 @@ check_sum_order (may_t x)
   //printf ("%04X ", (unsigned int) MAY_HASH (MAY_AT (x, n-1))); may_dump (MAY_AT (x, n-1));
   return 1;
 }
+#else
+#define check_sum_order(x) 1
 #endif
 
 /* From begin to end, sum all the num values */
