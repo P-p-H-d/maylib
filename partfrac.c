@@ -56,10 +56,11 @@ may_partfrac (may_t f, may_t var, may_t (*func) (may_t, may_t))
 
   /* Transform f into a rational function and factorize the denominator */
   may_comdenom (&num, &denom, f);
-  if (may_one_p (denom))
+  if (may_one_p (denom)) {
     /* Technically we can return f, but since comdenom has simplified
        the fraction num/denom, we prefere returning the simplified fraction. */
     return may_keep (num);
+  }
   if (func == NULL)
     func = may_sqrfree;
   denom = (*func) (denom, var);
@@ -92,7 +93,7 @@ may_partfrac (may_t f, may_t var, may_t (*func) (may_t, may_t))
   } else
     n = n-1;
 
-  /* Start the completer partial fraction decompisition */
+  /* Start the complete partial fraction decomposition */
   may_t a = num;
   if (!PartialFraction (&a, n, de, var))
     return may_keep (NULL);
