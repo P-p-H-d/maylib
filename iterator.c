@@ -31,14 +31,14 @@ MA 02110-1301, USA. */
 # define may_sum_iterator_end  may_sum_iterator_end_internal
 # define may_sum_iterator_ref  may_sum_iterator_ref_internal
 # define may_sum_iterator_tail may_sum_iterator_tail_internal
-# define may_sum_extract       may_sum_extract
+# define may_sum_extract       may_sum_extract_internal
 # define may_product_iterator_init may_product_iterator_init_internal
 # define may_product_iterator_next may_product_iterator_next_internal
 # define may_product_iterator_end  may_product_iterator_end_internal
 # define may_product_iterator_end2  may_product_iterator_end2_internal
 # define may_product_iterator_ref   may_product_iterator_ref_internal
 # define may_product_iterator_tail  may_product_iterator_tail_internal
-# define may_product_extract        may_product_extract
+# define may_product_extract        may_product_extract_internal
 # define may_nops may_nops_internal
 # define may_op may_op_internal
 #else
@@ -50,12 +50,14 @@ MA 02110-1301, USA. */
 # undef may_sum_iterator_end
 # undef may_sum_iterator_ref
 # undef may_sum_iterator_tail
+# undef may_sum_extract
 # undef may_product_iterator_init
 # undef may_product_iterator_next
 # undef may_product_iterator_end
 # undef may_product_iterator_end2
 # undef may_product_iterator_ref
 # undef may_product_iterator_tail
+# undef may_product_extract
 # undef may_nops
 # undef may_op
 #endif
