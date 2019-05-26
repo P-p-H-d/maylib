@@ -27,7 +27,7 @@ MA 02110-1301, USA. */
 #include <ctype.h>
 
 #include "may.h"
-#include "may-macros.h"
+#include "macros.h"
 
 #ifndef MAY_MAX_EXTENSION
 # define MAY_MAX_EXTENSION 20
