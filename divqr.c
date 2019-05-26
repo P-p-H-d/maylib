@@ -38,6 +38,7 @@ may_div_qr_xexp (may_t *q, may_t *r, may_t a, may_t var, may_t n)
     *q = MAY_ZERO;
 
   MAY_RECORD ();
+  // TODO: Shall use expand_var when it becomes efficient
   a = may_expand (a);
   may_iterator_t it;
   may_t c, b, sumnum, var_pow_n = may_pow (var, n);
@@ -65,6 +66,7 @@ may_div_qr_xexp (may_t *q, may_t *r, may_t a, may_t var, may_t n)
     if (q)
       *q = may_addinc_c (*q, may_divexact (may_sum_iterator_ref (it), var_pow_n));
   }
+
   /* Finish separating quotient and reminder */
   if (r) {
     *r = may_addinc_c (*r, sumnum);

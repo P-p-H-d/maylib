@@ -122,7 +122,7 @@ may_extract_coeff (unsigned long na, may_t tab[na],
   /* Expand the expression (if needed) and extract all coefficients with their exponents */
   a = may_expand (a);
   na = may_extract_all_coeff_deg (na, temp, a, x);
-  /* The recopy the coefficients of the table to tab */
+  /* Then recopy the coefficients of the table to tab */
   for (i = 0; i < na; i++)
     tab[i] = temp[i].a;
   return na;
@@ -192,12 +192,10 @@ may_array2upol (unsigned long n, may_t *table, may_t var)
 int
 may_cmp_multidegree (may_size_t n, mpz_srcptr b[n], mpz_srcptr a[n])
 {
-  may_size_t i;
   MAY_ASSERT (n > 0);
 
-  for (i = 0; i<n; i++) {
-    int cmp;
-    cmp = mpz_cmp (b[i], a[i]);
+  for (may_size_t i = 0; i<n; i++) {
+    int cmp = mpz_cmp (b[i], a[i]);
     if (MAY_LIKELY (cmp))
       return cmp;
   }
