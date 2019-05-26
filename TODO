@@ -83,6 +83,9 @@ may_t   may_expand_mod (may_t a, may_t modulus, may_t vars)
 may_t   may_resultant (may_t a, may_t b, may_t x)
         Return the resultant
 
+may_t   may_compose(may_t f, may_t g, may_t x)
+        Assuming f and g are univariate polynomial of x, return f(g(x))
+        Efficient Algorithm ?
 
 
 ++++++++++++++++++++++++++++++
@@ -148,7 +151,8 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
  Wrong result
  Result shall be the expanded version of (1+x^2+y^3+z^4)^12*(1-x^2+y-z)^11
  It is not.
- 
+
+
 ++++++++++++++++++++++++++++
 ++++    Performance      +++
 ++++++++++++++++++++++++++++
@@ -158,7 +162,9 @@ may_t   may_resultant (may_t a, may_t b, may_t x)
 
 + ./t-pika "tan(2+x)" -oseries x 100
   ==> 2s whereas it is instantenous with taylor
-
+  ./t-pika "sin(cos(1+x)" -oseries x 100
+  More generaraly series is not efficient at all
+  
 + may_expand can be improved on some sparse input like
   ==> (1+3*x+2*x^2)^1000
 
