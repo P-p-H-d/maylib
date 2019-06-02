@@ -188,15 +188,17 @@ expand_mul_two_sum (may_t a, may_t b)
         if (MAY_LIKELY (MAY_TYPE (bb) == MAY_FACTOR_T)) {
           num = may_num_mul (num, MAY_AT (aa, 0), MAY_AT (bb, 0));
           bb = MAY_AT (bb, 1);
-        } else
+        } else {
           num = may_num_set (num, MAY_AT (aa, 0));
+        }
         aa = MAY_AT (aa, 1);
       } else if (MAY_TYPE (bb) == MAY_FACTOR_T) {
         num = may_num_set (num, MAY_AT (bb, 0));
         bb = MAY_AT (bb, 1);
-      } else
+      } else {
         num = may_num_set (num, MAY_ONE);
-
+      }
+      
       /* Extract the product iterators */
       if (MAY_LIKELY (MAY_TYPE (aa) == MAY_PRODUCT_T)) {
         pa = MAY_AT_PTR (aa, 0);
@@ -311,14 +313,14 @@ expand_mul_two_sum (may_t a, may_t b)
         MAY_COMPACT (z);
         /* If we have to reperform an expand due to algebraic dependency */
         if (MAY_UNLIKELY (reexpand_product == 1)) {
-          z = may_expand (may_eval (may_mul_c (num, z)));
+          z = may_expand (may_eval (may_mul_c (may_num_set(MAY_DUMMY, num), z)));
           may_iterator_t it;
-          may_t num2;
+          may_t num2, num3;
           for(num2 = may_sum_iterator_init (it, z);
-              may_sum_iterator_end (&num, &z, it) ;
+              may_sum_iterator_end (&num3, &z, it) ;
               may_sum_iterator_next(it)) {
             /* Insert (num,z) into the tree */
-            tree = may_bintree_insert (tree, num, z);
+            tree = may_bintree_insert (tree, num3, z);
           }
           sumnum = may_num_add (sumnum, sumnum, num2);
         } else {
@@ -426,8 +428,7 @@ evaluate_at_power2 (mpz_t z, may_t a, unsigned long n, unsigned long deg)
 }
 
 /* Multiply 2 univariate integer polynomial 'a' and 'b' of variable 'v'
-   using Kronecker tricks.
-   GMP is good and I don't want to write FFT code myself. */
+   using Kronecker tricks. */
 static may_t
 expand_univariate_poly (may_t a, may_t b, may_t v)
 {
@@ -617,7 +618,7 @@ static int cmp_size (const void *a, const void *b) {
 }
 
 static may_t
-perform_multiplication (const may_t arg[], may_size_t n)
+expand_mul_heavy (const may_t arg[], may_size_t n)
 {
   struct item tab[n+1];
   may_size_t i;
@@ -625,7 +626,7 @@ perform_multiplication (const may_t arg[], may_size_t n)
 
   MAY_LOG_FUNC (("n=%d", (int)n));
 
-  /* Step A */
+  /* Step A: analyze inputs */
   for (i = 0 ; i < n; i++) {
     tab[i].pureint = 0;
     tab[i].arg = arg[i];
@@ -644,6 +645,7 @@ perform_multiplication (const may_t arg[], may_size_t n)
       }
     }
   }
+  
   /* If we have converted some entry from Q[X] to Z[X], we need to handle the extracted denominator */
   if (MAY_UNLIKELY (rat != NULL)) {
     tab[n].pureint = 0;
@@ -805,10 +807,6 @@ may_expand_recur (may_t x)
   may_mark();
   switch (MAY_TYPE(x))
     {
-    case MAY_INT_T ... MAY_ATOMIC_LIMIT:
-      /* This case should be nearly impossible since they have already set the EXPAND flag */
-      y = x;
-      break;
     case MAY_PRODUCT_T: /* 5% of the cases, but the ones which are slow */
       {
 	/* 1. Compute all the sub args and get the size of the result */
@@ -834,6 +832,7 @@ may_expand_recur (may_t x)
             nsum ++;
           }
         }
+        
 	/* 2. Check special case when no expansion (which is likely: 99.5%) */
 	if (MAY_LIKELY (final == 1)) {
           if (MAY_UNLIKELY (isnew)) {
@@ -850,9 +849,10 @@ may_expand_recur (may_t x)
           y = expand_mul_basecase (arg, n, final);
         /* Theses are very unlikely (0.000825% of the total expand calls!) BUT quite heavy in CPU time */
         else
-          y = perform_multiplication (arg, n);
+          y = expand_mul_heavy (arg, n);
       }
       break;
+
     case MAY_POW_T: /* 4% of the cases, but the other ones which are slow*/
       /* (A + B) ^N --> Multinome */
       ; may_t base = may_expand_recur (MAY_AT(x, 0));
@@ -953,10 +953,22 @@ may_expand_recur (may_t x)
       } else
         y = x;
       break;
+
     case MAY_FACTOR_T:
+      y = may_expand_recur (MAY_AT(x, 1));
+      if (MAY_LIKELY(y != MAY_AT(x, 1))) {
+        may_t z = MAY_NODE_C (MAY_FACTOR_T, 2);
+        MAY_SET_AT(z, 0, MAY_AT(x, 0));
+        MAY_SET_AT(z, 1, y);
+        y = z;
+      } else {
+        y = x;
+      }
+      break;
+    
     case MAY_SUM_T: /* 90((+5% of the previous cases) */
       n = MAY_NODE_SIZE(x);
-      y = MAY_NODE_C (MAY_TYPE(x), n);
+      y = MAY_NODE_C (MAY_SUM_T, n);
       int rebuild = 1;
       for (i = 0 ; MAY_LIKELY (i < n); i++) {
 	may_t xi = MAY_AT (x, i);
@@ -968,6 +980,7 @@ may_expand_recur (may_t x)
       if (MAY_LIKELY (rebuild))
 	y = x;
       break;
+
       /* expand is not recursive by default */
     default:
       y = x;
