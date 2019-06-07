@@ -128,10 +128,12 @@ may_div_qr_one (may_t *q, may_t *r, may_t a, may_t b, may_t var)
       a_tab[d] = tmp;
       tmp = may_neg(tmp);
       for (long i = 1; i <= db; i++) {
-        a_tab[d-i] = may_addinc_c (a_tab[d-i], may_mul_c (tmp, b_tab[db-i]));
-        /* FIXME: Really needed ? Good idea ?
-           Why not performing it only when divising by the element ?*/
-        a_tab[d-i] = may_expand (may_eval (a_tab[d-i]));
+        if (!MAY_ZERO_P(b_tab[db-i])) {
+          a_tab[d-i] = may_addinc_c (a_tab[d-i], may_mul_c (tmp, b_tab[db-i]));
+          /* FIXME: Really needed ? Good idea ?
+             Why not performing it only when divising by the element ?*/
+          a_tab[d-i] = may_expand (may_eval (a_tab[d-i]));
+        }
       }
     }
     d = d - 1;

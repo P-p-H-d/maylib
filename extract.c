@@ -141,7 +141,7 @@ may_upol2array(unsigned long *n, may_t **tab,
 
   /* 2. Extract the couple (val, power) */
   unsigned long na = may_nops(upol)+1;
-  struct may_coeff_deg_s temp[na];
+  struct may_coeff_deg_s temp[na]; /* TODO: Avoid stack allocation if too big */
   na = may_extract_all_coeff_deg (na, temp, upol, var);
   if (MAY_UNLIKELY (na == 0))
     return 0;
