@@ -58,12 +58,12 @@ MAY_CONCACT(may_uni, MAY_FUNCTION_NAME) (may_t *coeff, mpz_srcptr *deg, may_t *l
   if (MAY_UNLIKELY (MAY_TYPE (x) != MAY_SUM_T)) {
     if (leader)
       *leader = x;
-    return may_extract_coeff_deg (coeff, deg, x, v);
+    return may_extract_coeff_deg (coeff, deg, x, v, true);
   }
 
   /* Let's the fun begin! */
   c1_ptr = coeff != NULL ? &c : NULL;
-  if (MAY_UNLIKELY (!may_extract_coeff_deg (c1_ptr, &d, MAY_AT (x, 0), v)))
+  if (MAY_UNLIKELY (!may_extract_coeff_deg (c1_ptr, &d, MAY_AT (x, 0), v, true)))
     return 0;
 
   n = MAY_NODE_SIZE(x);
@@ -82,7 +82,7 @@ MAY_CONCACT(may_uni, MAY_FUNCTION_NAME) (may_t *coeff, mpz_srcptr *deg, may_t *l
     /* Extract the current monomial */
     mpz_srcptr d1;
     int cmp;
-    if (MAY_UNLIKELY (!may_extract_coeff_deg (c1_ptr, &d1, MAY_AT (x, i), v)))
+    if (MAY_UNLIKELY (!may_extract_coeff_deg (c1_ptr, &d1, MAY_AT (x, i), v, true)))
       return 0;
     /* Compare degrees. */
     cmp = mpz_cmp (d1, d);

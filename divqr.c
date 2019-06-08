@@ -87,18 +87,18 @@ static int
 may_div_qr_one (may_t *q, may_t *r, may_t a, may_t b, may_t var)
 {
   MAY_ASSERT(MAY_TYPE(var) == MAY_STRING_T);
+  MAY_LOG_FUNC (("a='%Y' b='%Y var='%Y'", a, b, var));
+
   may_mark_t mark;
   may_mark(mark);
-
-  MAY_LOG_FUNC (("a='%Y' b='%Y var='%Y'", a, b, var));
 
   /* Transform the univariate polynomial into an array */
   may_t *a_tab, *b_tab;
   unsigned long na, nb;
   /* TO PARALELIZE */
-  if (may_upol2array (&na, &a_tab, a, var) == 0)
+  if (may_upol2array (&na, &a_tab, a, var, true) == 0)
     return may_compact (mark, NULL), 0;
-  if (may_upol2array (&nb, &b_tab, b, var) == 0)
+  if (may_upol2array (&nb, &b_tab, b, var, true) == 0)
     return may_compact (mark, NULL), 0;
   long da = na-1;
   long db = nb-1;

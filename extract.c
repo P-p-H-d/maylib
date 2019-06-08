@@ -19,6 +19,137 @@ MA 02110-1301, USA. */
 
 #include "may-impl.h"
 
+/* Extract the degree 'd' and the coefficient 'c' from 'x',
+   view as of a monomial in 'v' (Unidegree)
+   Test for independence only if independent is true.
+   Return false in case of failure (can't see 'x' as a polynomial of the variable 'v'),
+   true otherwise */
+bool
+may_extract_coeff_deg (may_t *c, mpz_srcptr *d,
+                       may_t x, may_t v,
+                       bool independent)
+{
+  MAY_LOG_FUNC (("x='%Y', v='%Y'", x, v));
+  MAY_ASSERT (!independent || MAY_TYPE (v) == MAY_STRING_T);
+  MAY_ASSERT (d != NULL);
+
+  /* Trivial numerical case */
+  if (MAY_UNLIKELY (MAY_PURENUM_P (x))) {
+    if (c != NULL)
+      *c = x;
+    *d = MAY_INT (MAY_ZERO);
+    return true;
+  }
+  
+  may_t coeff, base;
+
+  /* Extract the coefficient and the base */
+  if (MAY_LIKELY (MAY_TYPE (x) == MAY_FACTOR_T)) {
+    coeff = MAY_AT (x, 0);
+    base  = MAY_AT (x, 1);
+  } else {
+    coeff = MAY_ONE;
+    base = x;
+  }
+
+  /* Test if x=v. Other pure identifiers are dealt inside the default case */
+  if (MAY_UNLIKELY (may_identical (base, v) == 0)) {
+    if (c != NULL)
+      *c = coeff;
+    *d = MAY_INT (MAY_ONE);
+    return true;
+  }
+
+  /* Test for Integer Power of v */
+  if (MAY_LIKELY (MAY_TYPE (base) == MAY_POW_T
+                  && may_identical (MAY_AT (base, 0), v) == 0)) {
+    may_t expo = MAY_AT (base, 1);
+    if (MAY_LIKELY (MAY_TYPE (expo) == MAY_INT_T)) {
+      if (c != NULL)
+        *c = coeff;
+      *d = MAY_INT (expo);
+      return true;
+    }
+    /* Non integer power of 'v' found (x^(1/2) for example) */
+    return false;
+  }
+
+  /* Test for product of power ? */
+  if (MAY_LIKELY (MAY_TYPE (base) == MAY_PRODUCT_T)) {
+    may_size_t i, n;
+    n = MAY_NODE_SIZE(base);
+    MAY_ASSERT (n != 0);
+    for (i = 0; i < n; i++) {
+      may_t localbase = MAY_AT (base, i);
+      /* Check for v or v^INTEGER */
+      if (may_identical (localbase, v) == 0
+          || (MAY_TYPE (localbase) == MAY_POW_T
+              && MAY_TYPE (MAY_AT (localbase, 1)) == MAY_INT_T
+              && may_identical (MAY_AT (localbase, 0), v) == 0)) {
+        /* Found! */
+        /* Check if what remains is independent... */
+        if (independent) {
+          for (may_size_t j = i+1; j<n; j++)
+            if (MAY_UNLIKELY (!may_independent_p (MAY_AT (base, j), v)))
+              return false;
+        }
+        /* Fill in output */
+        if (c != NULL) {
+          /* may_divexact is overkill (The function is more low level):
+             Moreover the sort of the product can be kept,
+             and the expand flag can be kept too.
+             ==> We want to short-circuit eval & expand.
+             Moreover this function may be called by may_divexact through
+             may_div_qr. */
+          may_t cc;
+          MAY_ASSERT (n >= 2);
+          if (n == 2) {
+            cc = MAY_AT (base, 1-i);
+          } else {
+            cc  = MAY_NODE_C(MAY_PRODUCT_T, n-1);
+            memcpy (MAY_AT_PTR(cc, 0), MAY_AT_PTR(base, 0),
+                    sizeof (may_t) * i);
+            memcpy (MAY_AT_PTR(cc, i), MAY_AT_PTR(base, i+1),
+                    sizeof (may_t) * (n-i-1));
+            /* FIXME: Num flag may be wrong */
+            MAY_CLOSE_C (cc, MAY_FLAGS (base),
+                         may_node_hash (MAY_AT_PTR (cc, 0), MAY_NODE_SIZE(cc)));
+            /* If expression was expanded, it remain expanded */
+            MAY_SET_FLAG(cc, MAY_FLAGS (base));
+          }
+          if (!MAY_FASTONE_P(coeff)) {
+            may_t cc2 = MAY_NODE_C (MAY_FACTOR_T, 2);
+            MAY_SET_AT(cc2, 0, coeff);
+            MAY_SET_AT(cc2, 1, cc);
+            MAY_CLOSE_C (cc2, MAY_FLAGS (cc), MAY_NEW_HASH2 (coeff, cc));
+            MAY_SET_FLAG(cc2, MAY_FLAGS (cc));
+            cc = cc2;
+          }
+          *c = cc;
+        }
+        *d = MAY_TYPE (localbase) != MAY_POW_T
+          ? MAY_INT (MAY_ONE) : MAY_INT (MAY_AT (localbase, 1));
+        return true;
+      }
+      /* Not 'v' or 'v^INT': Checks that it doesn't depend of 'v' */
+      if (independent) {
+        if (MAY_UNLIKELY (!may_independent_p (localbase, v)))
+          return false;
+      }
+    }
+    if (c != NULL)
+      *c = x;
+    *d = MAY_INT (MAY_ZERO);
+    return true; /* we known x is independent of v */
+  }
+
+  /* Default case. Degree 0 if independent of v. Impossible otherwise */
+  if (c != NULL)
+    *c = x;
+  *d = MAY_INT (MAY_ZERO);
+  return !independent || may_independent_p (base, v);
+}
+
 /* Internal structure used to define a pair coefficient / integer exponent */
 struct may_coeff_deg_s {
   may_t a;
@@ -43,7 +174,7 @@ cmp (const void *a, const void *b) {
 static unsigned long
 may_extract_all_coeff_deg (unsigned long na,
                            struct may_coeff_deg_s temp[na],
-                           may_t a, may_t x)
+                           may_t a, may_t x, bool independent)
 {
   unsigned long i, n;
   may_t tab[na];
@@ -53,7 +184,7 @@ may_extract_all_coeff_deg (unsigned long na,
 
   /* Special case if it isn't a sum: there is only one term */
   if (MAY_TYPE (a) != MAY_SUM_T) {
-    if (MAY_UNLIKELY (may_extract_coeff_deg (&temp[0].a, &temp[0].z, a, x) == 0))
+    if (MAY_UNLIKELY (may_extract_coeff_deg (&temp[0].a, &temp[0].z, a, x, independent) == 0))
       return 0;
     MAY_ASSERT (may_identical (temp[0].a, may_expand (temp[0].a)) == 0);
     MAY_SET_FLAG (temp[0].a,MAY_EXPAND_F);
@@ -65,7 +196,7 @@ may_extract_all_coeff_deg (unsigned long na,
   MAY_ASSERT (n >= 2 && n <= na);
   /* TO PARALELIZE */
   for (i = 0; i < n; i++)
-    if (MAY_UNLIKELY (may_extract_coeff_deg (&temp[i].a, &temp[i].z, MAY_AT (a, i), x) == 0))
+    if (MAY_UNLIKELY (may_extract_coeff_deg (&temp[i].a, &temp[i].z, MAY_AT (a, i), x, independent) == 0))
       return 0;
 
   /* Sort table according to the exponent */
@@ -90,6 +221,7 @@ may_extract_all_coeff_deg (unsigned long na,
       ref = &temp[i];
     }
   }
+  /* Final term */
   dest->z = ref->z;
   np = 0;
   do {
@@ -97,6 +229,7 @@ may_extract_all_coeff_deg (unsigned long na,
     MAY_ASSERT (np <= na);
   } while (ref != &temp[n]);
   dest->a = may_eval (may_add_vc (np, tab));
+  
   MAY_ASSERT (may_identical (dest->a, may_expand (dest->a)) == 0);
   MAY_SET_FLAG (dest->a,MAY_EXPAND_F);
   nn++;
@@ -112,28 +245,26 @@ may_extract_all_coeff_deg (unsigned long na,
    an assertion will fail */
 unsigned long
 may_extract_coeff (unsigned long na, may_t tab[na],
-                   may_t a, may_t x)
+                   may_t a, may_t x, bool independent)
 {
-  unsigned long i;
-  struct may_coeff_deg_s temp[na];
-
   MAY_LOG_FUNC (("na=%lu tab[0]='%Y' tab[1]=='%Y', a='%Y', x='%Y'",na,tab[0],tab[1], a, x));
+
+  unsigned long i;
+  struct may_coeff_deg_s temp[na]; /* TODO: Avoid stack allocation if too big */
 
   /* Expand the expression (if needed) and extract all coefficients with their exponents */
   a = may_expand (a);
-  na = may_extract_all_coeff_deg (na, temp, a, x);
+  na = may_extract_all_coeff_deg (na, temp, a, x, independent);
   /* Then recopy the coefficients of the table to tab */
   for (i = 0; i < na; i++)
     tab[i] = temp[i].a;
   return na;
 }
 
-int
+bool
 may_upol2array(unsigned long *n, may_t **tab,
-               may_t upol, may_t var)
+               may_t upol, may_t var, bool independent)
 {
-  MAY_ASSERT (MAY_TYPE(var) == MAY_STRING_T);
-
   MAY_LOG_FUNC (("upol='%Y' var='%Y'", upol, var));
 
   /* 1. Expand */
@@ -142,26 +273,23 @@ may_upol2array(unsigned long *n, may_t **tab,
   /* 2. Extract the couple (val, power) */
   unsigned long na = may_nops(upol)+1;
   struct may_coeff_deg_s temp[na]; /* TODO: Avoid stack allocation if too big */
-  na = may_extract_all_coeff_deg (na, temp, upol, var);
+  na = may_extract_all_coeff_deg (na, temp, upol, var, independent);
   if (MAY_UNLIKELY (na == 0))
-    return 0;
+    return false;
 
-  /* 3. Extract the biggest power */
-  mpz_srcptr max = temp[0].z;
-  for (unsigned long i = 1; i < na; i++) {
-    if (mpz_cmp (max, temp[i].z) < 0)
-      max = temp[i].z;
-    if (MAY_UNLIKELY (mpz_sgn(temp[i].z) < 0))
-      return 0;
-  }
-  if (MAY_UNLIKELY (!mpz_fits_ulong_p (max)))
-    return 0;
-  unsigned long deg = mpz_get_ui(max);
+  /* 3. Get the biggest power */
+  mpz_srcptr max = temp[na-1].z;
+  /* Test if too big to be allocated */
+  if (MAY_UNLIKELY (!mpz_fits_uint_p (max)))
+    return false;
+  unsigned deg = mpz_get_ui(max);
 
   /* 4. Create the array */
   may_t *table = may_alloc ((deg+1)*sizeof(may_t));
-  unsigned long j = 0;
-  for (unsigned long i = 0; i <= deg; i++) {
+  unsigned j = 0;
+  for (unsigned i = 0; i <= deg; i++) {
+    if (MAY_UNLIKELY (mpz_sgn(temp[j].z) < 0))
+      return false;
     if (mpz_cmp_ui (temp[j].z, i) == 0) {
       table[i] = temp[j].a;
       j++;
@@ -172,7 +300,7 @@ may_upol2array(unsigned long *n, may_t **tab,
   /* Output */
   *n = deg+1;
   *tab = table;
-  return 1;
+  return true;
 }
 
 may_t
@@ -207,129 +335,6 @@ may_cmp_multidegree (may_size_t n, mpz_srcptr b[n], mpz_srcptr a[n])
   return 0;
 }
 
-/* Extract the degree 'd' and the coefficient 'c' from 'x',
-   view as of a monomial in 'v' (Unidegree)
-   Return 0 in case of failure (can't see 'x' as a polynomial of the variable 'v'), 1 otherwise */
-int
-may_extract_coeff_deg (may_t *c, mpz_srcptr *d,
-                       may_t x, may_t v)
-{
-  may_t coeff, base;
-
-  MAY_LOG_FUNC (("x='%Y', v='%Y'", x, v));
-
-  /* c may be NULL */
-  MAY_ASSERT (MAY_TYPE (v) == MAY_STRING_T);
-  MAY_ASSERT (d != NULL);
-
-  /* Extract the coefficient and the base */
-  if (MAY_LIKELY (MAY_TYPE (x) == MAY_FACTOR_T)) {
-    coeff = MAY_AT (x, 0);
-    base  = MAY_AT (x, 1);
-  /* Trivial numerical case */
-  } else if (MAY_PURENUM_P (x)) {
-    if (c != NULL)
-      *c = x;
-    *d = MAY_INT (MAY_ZERO);
-    return 1;
-  } else {
-    coeff = MAY_ONE;
-    base = x;
-  }
-
-  /* Check if x=v. Other pure identifiers are dealt inside the default case */
-  if (MAY_UNLIKELY (may_identical (base, v) == 0)) {
-    if (c != NULL)
-      *c = coeff;
-    *d = MAY_INT (MAY_ONE);
-    return 1;
-  }
-
-  /* Int Power of v */
-  if (MAY_LIKELY (MAY_TYPE (base) == MAY_POW_T
-                  && may_identical (MAY_AT (base, 0), v) == 0)) {
-    base = MAY_AT (base, 1);
-    if (MAY_LIKELY (MAY_TYPE (base) == MAY_INT_T)) {
-      if (c != NULL)
-        *c = coeff;
-      *d = MAY_INT (base);
-      return 1;
-    }
-    /* Non integer power of 'v' found (x^(1/2) for example) */
-    return 0;
-  }
-
-  /* Product of power ? */
-  if (MAY_LIKELY (MAY_TYPE (base) == MAY_PRODUCT_T)) {
-    may_size_t i, n;
-    n = MAY_NODE_SIZE(base);
-    MAY_ASSERT (n != 0);
-    for (i = 0; i < n; i++) {
-      may_t localbase = MAY_AT (base, i);
-      /* Check for v or v^INTEGER */
-      if (may_identical (localbase, v) == 0
-          || (MAY_TYPE (localbase) == MAY_POW_T
-              && MAY_TYPE (MAY_AT (localbase, 1)) == MAY_INT_T
-              && may_identical (MAY_AT (localbase, 0), v) == 0)) {
-        /* Found! */
-        /* Check if what remains is independent... */
-        for (may_size_t j = i+1; j<n; j++)
-          if (MAY_UNLIKELY (!may_independent_p (MAY_AT (base, j), v)))
-            return 0;
-        /* Fill in output */
-        if (c != NULL) {
-          /* may_divexact is overkill (The function is more low level):
-             Moreover the sort of the product can be kept,
-             and the expand flag can be kept too.
-             ==> We may short-circuit eval & expand.
-             Moreover this function may be called by may_divexact through
-             may_div_qr. */
-          may_t cc;
-          MAY_ASSERT (n >= 2);
-          if (n == 2) {
-            cc = MAY_AT (base, 1-i);
-          } else {
-            cc  = MAY_NODE_C(MAY_PRODUCT_T, n-1);
-            memcpy (MAY_AT_PTR(cc, 0), MAY_AT_PTR(base, 0),
-                    sizeof (may_t) * i);
-            memcpy (MAY_AT_PTR(cc, i), MAY_AT_PTR(base, i+1),
-                    sizeof (may_t) * (n-i-1));
-            /* FIXME: Num flag may be wrong */
-            MAY_CLOSE_C (cc, MAY_FLAGS (base),
-                     may_node_hash (MAY_AT_PTR (cc, 0), MAY_NODE_SIZE(cc)));
-            /* If expression was expanded, it remain expanded */
-            MAY_SET_FLAG(cc, MAY_FLAGS (base));
-          }
-          if (coeff != MAY_ONE) {
-            may_t cc2 = MAY_NODE_C (MAY_FACTOR_T, 2);
-            MAY_SET_AT(cc2, 0, coeff);
-            MAY_SET_AT(cc2, 1, cc);
-            MAY_CLOSE_C (cc2, MAY_FLAGS (cc), MAY_NEW_HASH2 (coeff, cc));
-            MAY_SET_FLAG(cc2, MAY_FLAGS (cc));
-            cc = cc2;
-          }
-          *c = cc;
-        }
-        *d = MAY_TYPE (localbase) != MAY_POW_T
-          ? MAY_INT (MAY_ONE) : MAY_INT (MAY_AT (localbase, 1));
-        return 1;
-      }
-      /* Not 'v' or 'v^INT': Checks that it doesn't depend of 'v' */
-      if (MAY_UNLIKELY (!may_independent_p (localbase, v)))
-        return 0;
-    }
-    if (c != NULL)
-      *c = x;
-    *d = MAY_INT (MAY_ZERO);
-    return 1; /* we known x is independent of v */
-  }
-
-  /* Default case. Degree 0 if independent of v. Impossible otherwise */
-  if (c != NULL)
-    *c = x;
-  *d = MAY_INT (MAY_ZERO);
-  return may_independent_p (base, v);
-}
 
 /* Personnal version of the independent function.
    With a list of variables to tests: x must be independent of all variables in 'list' */

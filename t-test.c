@@ -4424,8 +4424,8 @@ void test_upol2array(void)
   may_t p = may_parse_str("x*y+x^3+x+a+2");
   may_t *table;
   unsigned long n;
-  int b = may_upol2array (&n, &table, p, x);
-  check_bool (b == 1);
+  bool b = may_upol2array (&n, &table, p, x, true);
+  check_bool (b);
   check_si (n, 4);
   check (table[0], "a+2");
   check (table[1], "y+1");
@@ -4433,12 +4433,12 @@ void test_upol2array(void)
   check (table[3], "1");
 
   p = may_parse_str ("x^-1");
-  b = may_upol2array (&n, &table, p, x);
-  check_bool (b == 0);
+  b = may_upol2array (&n, &table, p, x, true);
+  check_bool (!b);
 
   p = may_parse_str ("x^1000000000000000000000000000000000000000");
-  b = may_upol2array (&n, &table, p, x);
-  check_bool (b == 0);
+  b = may_upol2array (&n, &table, p, x, true);
+  check_bool (!b);
 
   may_keep(NULL);
 }

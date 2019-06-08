@@ -427,8 +427,8 @@ extern "C" {
   may_t     may_recursive     (may_t, may_t (*) (may_t), unsigned long);
   may_t     may_smod          (may_t, may_t);
 
-  int       may_upol2array    (unsigned long *, may_t **,
-                               may_t , may_t);
+  bool      may_upol2array    (unsigned long *, may_t **,
+                               may_t , may_t, bool);
   may_t     may_array2upol    (unsigned long, may_t *, may_t);
 
   /* I/O functions */

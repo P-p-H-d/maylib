@@ -38,8 +38,8 @@ may_sr_gcd (may_t a, may_t b, may_t x)
   {
     may_t tab[na+nb];
     may_mark ();
-    na = may_extract_coeff (na, tab, a, x);
-    nb = may_extract_coeff (nb, tab+na, b, x);
+    na = may_extract_coeff (na, tab, a, x, false);
+    nb = may_extract_coeff (nb, tab+na, b, x, false);
     gcd = may_keep (may_gcd (na+nb, tab));
   }
 
@@ -524,7 +524,7 @@ may_gcd (unsigned long n, const may_t tab[])
         tabi = may_replace (tabi, MAY_AT (unused_var, k), var);
       }
       /* Extract the coeff of tabi in the enlarged table */
-      may_size_t m = may_extract_coeff (ntabi+1, &expandtab[nexpand], tabi, var);
+      may_size_t m = may_extract_coeff (ntabi+1, &expandtab[nexpand], tabi, var, false);
       if (MAY_UNLIKELY (m == 0)) {
         /* Failed to decompose it against this var: non polynomial dependance */
         MAY_RET_EVAL (naivegcd);
@@ -681,7 +681,7 @@ may_content (may_t *content, may_t *primpart, may_t b, may_t x)
     may_size_t n = may_nops (b) + 1;
     may_t tab[n];
     MAY_LOG_MSG(("n=%lu\n", (unsigned long) n));
-    may_size_t nb = may_extract_coeff (n, tab, b, x);
+    may_size_t nb = may_extract_coeff (n, tab, b, x, false);
     c = may_gcd (nb, tab);
   }
 

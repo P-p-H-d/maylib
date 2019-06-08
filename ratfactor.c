@@ -165,7 +165,7 @@ content_except_x (may_t p, may_t x)
   for (may_size_t i = 0; i < n; i++, it++) {
     may_t a;
     mpz_srcptr z;
-    may_extract_coeff_deg (&a, &z, *it, x);
+    may_extract_coeff_deg (&a, &z, *it, x, true);
     may_t num = MAY_ONE, base = MAY_ONE;
     if (MAY_TYPE (a) == MAY_FACTOR_T) {
       num = MAY_AT (a, 0);

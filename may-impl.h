@@ -817,11 +817,11 @@ may_t may_divexact      (may_t, may_t);
 MAY_REGPARM may_t may_naive_gce     (may_t, may_t);
 may_t may_naive_lcm     (may_size_t, const may_t *);
 int   may_cmp_multidegree (may_size_t, mpz_srcptr [], mpz_srcptr []);
-int   may_extract_coeff_deg (may_t *, mpz_srcptr *, may_t, may_t);
+bool  may_extract_coeff_deg (may_t *, mpz_srcptr *, may_t, may_t, bool);
 int   may_extract_coeff_multideg (may_t *c, mpz_srcptr deg[], may_t x, may_size_t n,
                                   const may_t var[n], const may_size_t index_var[n],
                                   mpz_srcptr tempdeg[n], may_t tempsum[n]);
-unsigned long may_extract_coeff (unsigned long n, may_t [n], may_t, may_t);
+unsigned long may_extract_coeff (unsigned long n, may_t [n], may_t, may_t, bool);
 may_t may_find_one_polvar (unsigned long , const may_t []);
 may_t may_find_unused_polvar (unsigned long, const may_t []);
 may_t may_trig2exp2 (may_t);
