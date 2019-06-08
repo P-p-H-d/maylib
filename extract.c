@@ -178,11 +178,16 @@ may_upol2array(unsigned long *n, may_t **tab,
 may_t
 may_array2upol (unsigned long n, may_t *table, may_t var)
 {
+  if (MAY_UNLIKELY (n == 0))
+    return MAY_ZERO;
+  
   may_mark ();
-  may_t s = may_set_ui (0);
-  may_t var2pow = may_set_ui(1);
-  for (unsigned long i = 0; i < n ; i++) {
-    s = may_addinc_c (s, may_mul_c (table[i], var2pow));
+  may_t s = table[0];
+  may_t var2pow = var;
+  for (unsigned long i = 1; i < n ; i++) {
+    if (!MAY_FASTZERO_P(table[i])) {
+      s = may_addinc_c (s, may_mul_c (table[i], var2pow));
+    }
     var2pow = may_eval (may_mul_c (var2pow, var));
   }
   return may_keep (may_eval (s));
