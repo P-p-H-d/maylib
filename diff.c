@@ -42,7 +42,7 @@ may_hold_diff (may_t f, may_t v, may_t o, may_t a)
   if (!may_str_local_p (v)) {
     may_c.local_counter = 0;
     do {
-      local = may_set_str_local (may_get_domain (v));
+      local = may_set_str_local (MAY_SYMBOL(v).domain);
     } while (!may_independent_p (f, local));
     f = may_hold (may_replace_c (f, v, local));
   } else

@@ -307,7 +307,6 @@ extern "C" {
 
   /* Define traversal functions */
   const char *may_get_name    (may_t);
-  may_domain_e may_get_domain (may_t);
   size_t    may_nops          (may_t);
   may_t     may_op            (may_t, size_t);
   may_t     may_map_c         (may_t, may_t (*)(may_t));
