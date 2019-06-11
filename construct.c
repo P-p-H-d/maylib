@@ -842,70 +842,140 @@ may_t
 may_add (may_t x, may_t y)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (y));
-  MAY_RECORD ();
-  x = may_add_c (x, y);
-  MAY_RET_EVAL (x);
+  return may_eval(may_add_c(x, y));
 }
 
 may_t
 may_sub (may_t x, may_t y)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (y));
-  MAY_RECORD ();
-  x = may_sub_c (x, y);
-  MAY_RET_EVAL (x);
+  return may_eval(may_sub_c(x, y));
 }
 
 may_t
 may_mul (may_t x, may_t y)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (y));
-  MAY_RECORD ();
-  x = may_mul_c (x, y);
-  MAY_RET_EVAL (x);
+  return may_eval(may_mul_c(x, y));
 }
 
 may_t
 may_div (may_t x, may_t y)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (y));
-  MAY_RECORD ();
-  x = may_div_c (x, y);
-  MAY_RET_EVAL (x);
+  return may_eval(may_div_c(x, y));
 }
 
 may_t
 may_pow (may_t x, may_t y)
 {
   MAY_ASSERT (MAY_EVAL_P (x) && MAY_EVAL_P (y));
-  MAY_RECORD ();
-  x = may_pow_c (x, y);
-  MAY_RET_EVAL (x);
+  return may_eval(may_pow_c(x, y));
 }
 
 may_t
 may_neg (may_t x)
 {
-  MAY_ASSERT (MAY_EVAL_P (x));
-  MAY_RECORD ();
-  x = may_neg_c (x);
-  MAY_RET_EVAL (x);
+  return may_eval(may_neg_c(x));
 }
 
 may_t
 may_sqr (may_t x)
 {
-  MAY_ASSERT (MAY_EVAL_P (x));
-  MAY_RECORD ();
-  x = may_sqr_c (x);
-  MAY_RET_EVAL (x);
+  return may_eval(may_sqr_c(x));
 }
 
 may_t
 may_sqrt (may_t x)
 {
-  MAY_ASSERT (MAY_EVAL_P (x));
-  MAY_RECORD ();
-  x = may_sqrt_c (x);
-  MAY_RET_EVAL (x);
+  return may_eval(may_sqrt_c(x));
 }
+
+may_t may_exp (may_t z) {
+  return may_eval (may_exp_c (z));
+}
+
+may_t may_log (may_t z) {
+  return may_eval (may_log_c (z));
+}
+
+may_t may_abs (may_t z) {
+  return may_eval (may_abs_c (z));
+}
+
+may_t may_conj (may_t z) {
+  return may_eval (may_conj_c (z));
+}
+
+may_t may_real (may_t z) {
+  return may_eval (may_real_c (z));
+}
+
+may_t may_imag (may_t z) {
+  return may_eval (may_imag_c (z));
+}
+
+may_t may_argument (may_t z) {
+  return may_eval (may_argument_c (z));
+}
+
+may_t may_sign (may_t z) {
+  return may_eval (may_sign_c (z));
+}
+
+may_t may_floor (may_t z) {
+  return may_eval (may_floor_c (z));
+}
+
+may_t may_ceil (may_t z) {
+  return may_eval (may_ceil_c (z));
+}
+
+may_t  may_cos (may_t z) {
+  return may_eval (may_cos_c (z));
+}
+
+may_t may_sin (may_t z) {
+  return may_eval (may_sin_c (z));
+}
+
+may_t may_tan (may_t z) {
+  return may_eval (may_tan_c (z));
+}
+
+may_t may_asin (may_t z) {
+  return may_eval (may_asin_c (z));
+}
+
+may_t may_acos (may_t z) {
+  return may_eval (may_acos_c (z));
+}
+
+may_t may_atan (may_t z) {
+  return may_eval (may_atan_c (z));
+}
+
+may_t  may_cosh (may_t z) {
+  return may_eval (may_cosh_c (z));
+}
+
+may_t may_sinh (may_t z) {
+  return may_eval (may_sinh_c (z));
+}
+
+may_t may_tanh (may_t z) {
+  return may_eval (may_tanh_c (z));
+}
+
+may_t may_asinh (may_t z) {
+  return may_eval (may_asinh_c (z));
+}
+
+may_t may_acosh (may_t z) {
+  return may_eval (may_acosh_c (z));
+}
+
+may_t may_atanh (may_t z) {
+  return may_eval (may_atanh_c (z));
+}
+
