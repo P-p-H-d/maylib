@@ -31,7 +31,33 @@ TODO :
 
 + MATRIX
 
++ Rewite how the extensions are handled.
+Create a Jump Table Matrix
+with types as column,
+with function as line.
+Each function becomes a direct call to this matrix:
 
+typedef may_t (*func_t)(may_t);
+func_t diff_tab[256];
+
+may_t diff_recur_c(may_t x)
+{
+  if (MAY_UNLIKELY (MAY_NUM_P (x)))
+    return MAY_ZERO;
+  return diff_tab[MAY_TYPE(x)](x);
+}
+
+Registering an extension will fill in theses tables.
+Registering a function will need a default function to use.
+void may_func_register(diff_table, default_diff);
+
+==> Faster extension (as fast as native types)
+==> Fast indirect call (memory is not pollutated with other data)
+==> As the tables uses 256 entries, no mask nor comparaison is needed.
+==> Behavior can be regrouped by function (behavior of exp for diff, eval, ...)
+Most of the switch cases already use an implicit indirect table.
+
+How the init code shall be handled ?
 
 +++++++++++++++++++++++++++++++++
 ++++ Basic Operations         +++
