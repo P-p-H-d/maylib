@@ -33,7 +33,7 @@ MA 02110-1301, USA. */
 #define may_num_simplify(x) may_eval(x)
 #define may_num_set(d,a) (a)
 #define may_num_add(d,a,b) may_add_c(a,b)
-#include "bintree.c"
+#include "expand_bintree.c"
 
 may_t
 may_collect (may_t a, may_t x)

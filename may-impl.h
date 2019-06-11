@@ -112,7 +112,7 @@ MA 02110-1301, USA. */
 
 /*********************************************************************/
 #if defined(MAY_WANT_THREAD)
-# include "may-thread.h"
+# include "kernel_thread.h"
 #else
 # define MAY_MAX_THREAD         1
 # define MAY_THREAD_ATTR        /* empty */
