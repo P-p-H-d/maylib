@@ -19,11 +19,12 @@ MA 02110-1301, USA. */
 
 #include "may-impl.h"
 
-/* This antidiff algorithm is the very simple: it just looks for the expression inside a precomputed table */
+/* This antidiff algorithm is the very simple:
+   it just looks for the expression inside a precomputed table */
 
 /* First field is the 'ByteCode' filter: it is used to quickly match (or unmatch) the expression with the required expression
    Second field is the antidiff expression if the filter successed.
-   Finaly, it is some additional conditions about the variables used in the filter */
+   Finally, it is some additional conditions about the variables used in the filter */
 typedef struct {
   const char *ByteCode;
   const char *expression;
