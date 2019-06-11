@@ -22,7 +22,7 @@ VERSION=0.7.6
 .SUFFIXES: .c .o
 
 TESTS=t-charge.c t-eval.c t-test.c t-ihm.c t-tune.c
-SOURCES=construct.c dump.c eval.c expand.c expand_bintree.c expand_kara.c parser.c predicate.c diff.c subs.c num.c cmp.c set.c get.c get_str.c io.c name.c hash.c range.c ifactor.c eval_trig.c list.c eval_trigh.c approx.c hold.c sqrtsimp.c gcd1.c match.c rewrite.c data.c rectform.c version.c comdenom.c divexact.c lcm1.c degree.c taylor.c divqr.c gcd2.c collect.c polvar.c extension.c texpand.c rationalize.c e-list.c eval_func.c sqrfree.c transform.c recursive.c smod.c ratfactor.c iterator.c e-series.c combine.c normalsign.c copy.c extract.c antidiff.c gcdex.c partfrac.c e-rootof.c kernel.c kernel_heap.c kernel_thread.c kernel_os.c kernel_error.c kernel_log.c
+SOURCES=construct.c dump.c eval.c expand.c expand_bintree.c expand_kara.c parser.c predicate.c diff.c subs.c num.c cmp.c set.c get.c get_str.c io.c name.c range.c ifactor.c eval_trig.c list.c eval_trigh.c approx.c hold.c sqrtsimp.c gcd1.c match.c rewrite.c data.c rectform.c version.c comdenom.c divexact.c lcm1.c degree.c taylor.c divqr.c gcd2.c collect.c polvar.c extension.c texpand.c rationalize.c e-list.c eval_func.c sqrfree.c transform.c recursive.c smod.c ratfactor.c iterator.c e-series.c combine.c normalsign.c copy.c extract.c antidiff.c gcdex.c partfrac.c e-rootof.c kernel.c kernel_heap.c kernel_thread.c kernel_os.c kernel_error.c kernel_log.c kernel_hash.c
 HEADERS=may.h may-impl.h kernel_thread.h macros.h
 DIST=$(SOURCES) $(HEADERS) $(TESTS) Makefile TODO maylib.pdf maylib.texi COPYING.txt COPYING.LESSER.txt
 
