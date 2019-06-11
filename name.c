@@ -75,92 +75,61 @@ const char may_range_name[] = "RANGE";
 const char may_diff_name[] = "diff";
 const char may_data_name[] = "DATA";
 
+static const char *get_name_tab[] =
+  {
+    [MAY_INT_T] = may_integer_name,
+    [MAY_RAT_T] = may_rational_name,
+    [MAY_FLOAT_T] = may_float_name,
+    [MAY_COMPLEX_T] = may_complex_name,
+    [MAY_STRING_T] = may_string_name,
+    [MAY_DATA_T] = may_data_name,
+    [MAY_SUM_T] = may_sum_name,
+    [MAY_FACTOR_T] = may_product_name,
+    [MAY_PRODUCT_T] = may_product_name,
+    [MAY_POW_T] = may_pow_name,
+    [MAY_EXP_T] = may_exp_name,
+    [MAY_LOG_T] = may_log_name,
+    [MAY_SIN_T] = may_sin_name,
+    [MAY_COS_T] = may_cos_name,
+    [MAY_TAN_T] = may_tan_name,
+    [MAY_ASIN_T] = may_asin_name,
+    [MAY_ACOS_T] = may_acos_name,
+    [MAY_ATAN_T] = may_atan_name,
+    [MAY_SINH_T] = may_sinh_name,
+    [MAY_COSH_T] = may_cosh_name,
+    [MAY_TANH_T] = may_tanh_name,
+    [MAY_ASINH_T] = may_asinh_name,
+    [MAY_ACOSH_T] = may_acosh_name,
+    [MAY_ATANH_T] = may_atanh_name,
+    [MAY_ABS_T]   = may_abs_name,
+    [MAY_SIGN_T]  = may_sign_name,
+    [MAY_FLOOR_T] = may_floor_name,
+    [MAY_MOD_T]   = may_mod_name,
+    [MAY_GCD_T]   = may_gcd_name,
+    [MAY_CONJ_T]  = may_conj_name,
+    [MAY_REAL_T]  = may_real_name,
+    [MAY_IMAG_T]  = may_imag_name,
+    [MAY_ARGUMENT_T] = may_argument_name,
+    [MAY_GAMMA_T] = may_gamma_name,
+    [MAY_DIFF_T] = may_diff_name,
+    [MAY_LIST_T] = may_list_name,
+    [MAY_MAT_T] = may_mat_name,
+    [MAY_RANGE_T] = may_range_name
+  };
 
 const char *
 may_get_name (may_t x)
 {
-  switch (MAY_TYPE (x))
-    {
-    case MAY_INT_T:
-      return may_integer_name;
-    case MAY_RAT_T:
-      return may_rational_name;
-    case MAY_FLOAT_T:
-      return may_float_name;
-    case MAY_COMPLEX_T:
-      return may_complex_name;
-    case MAY_STRING_T:
-      return may_string_name;
-    case MAY_DATA_T:
-      return may_data_name;
-    case MAY_SUM_T:
-      return may_sum_name;
-    case MAY_FACTOR_T:
-    case MAY_PRODUCT_T:
-      return may_product_name;
-    case MAY_POW_T:
-      return may_pow_name;
-    case MAY_EXP_T:
-      return may_exp_name;
-    case MAY_LOG_T:
-      return may_log_name;
-    case MAY_SIN_T:
-      return may_sin_name;
-    case MAY_COS_T:
-      return may_cos_name;
-    case MAY_TAN_T:
-      return may_tan_name;
-    case MAY_ASIN_T:
-      return may_asin_name;
-    case MAY_ACOS_T:
-      return may_acos_name;
-    case MAY_ATAN_T:
-      return may_atan_name;
-    case MAY_SINH_T:
-      return may_sinh_name;
-    case MAY_COSH_T:
-      return may_cosh_name;
-    case MAY_TANH_T:
-      return may_tanh_name;
-    case MAY_ASINH_T:
-      return may_asinh_name;
-    case MAY_ACOSH_T:
-      return may_acosh_name;
-    case MAY_ATANH_T:
-      return may_atanh_name;
-    case MAY_ABS_T:
-      return may_abs_name;
-    case MAY_SIGN_T:
-      return may_sign_name;
-    case MAY_FLOOR_T:
-      return may_floor_name;
-    case MAY_MOD_T:
-      return may_mod_name;
-    case MAY_GCD_T:
-      return may_gcd_name;
-    case MAY_CONJ_T:
-      return may_conj_name;
-    case MAY_REAL_T:
-      return may_real_name;
-    case MAY_IMAG_T:
-      return may_imag_name;
-    case MAY_ARGUMENT_T:
-      return may_argument_name;
-    case MAY_GAMMA_T:
-      return may_gamma_name;
-    case MAY_DIFF_T:
-      return may_diff_name;
-    case MAY_FUNC_T:
-      return MAY_NAME(MAY_AT(x,0));
-    case MAY_LIST_T:
-      return may_list_name;
-    case MAY_MAT_T:
-      return may_mat_name;
-    case MAY_RANGE_T:
-      return may_range_name;
-    default:
-      if (MAY_UNLIKELY (MAY_EXT_P (x)))
-        return may_c.extension_tab[MAY_EXT2INDEX (MAY_TYPE (x))]->name;
-      return NULL;
+  const char *name = NULL;
+  unsigned u = MAY_TYPE(x);
+  if (MAY_LIKELY ( u < numberof(get_name_tab))) {
+    name = get_name_tab[u];
+    if (MAY_UNLIKELY(name == NULL)) {
+      if (u == MAY_FUNC_T)
+        name = MAY_NAME(MAY_AT(x,0));
+      else if (MAY_UNLIKELY (MAY_EXT_P (x)))
+        name = may_c.extension_tab[MAY_EXT2INDEX (MAY_TYPE (x))]->name;
     }
+  }
+  return name;
 }
