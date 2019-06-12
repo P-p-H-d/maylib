@@ -46,9 +46,14 @@ MAY_INLINE void
 finish_compact (void *mark)
 {
   /* If the integer modulo disapears, remove it */
+#ifndef MAY_WANT_THREAD
   if (MAY_UNLIKELY (mark <= (void*)may_g.frame.intmod))
-    may_g.frame.intmod = NULL;
-
+#else
+    MAY_ASSERT(mark == may_g.Heap.comp_mark);
+    if (MAY_UNLIKELY (may_g.Heap.comp_mark <= (void*)may_g.frame.intmod && (void*)may_g.frame.intmod < may_g.Heap.comp_limit))
+#endif
+      may_g.frame.intmod = NULL;
+  
   /* Free the set_str cache */
   may_g.frame.cache_set_str_i = may_g.frame.cache_set_str_n = 0;
 
@@ -213,19 +218,23 @@ may_compact_internal (may_t x, void *mark)
 #ifdef MAY_WANT_ASSERT
   char *oldtop = may_g.Heap.top;
 #endif
+  /* Update heap variables for compact */
+  may_g.Heap.comp_mark = mark;
+  MAY_DEF_IF_THREAD (may_g.Heap.comp_base = may_g.Heap.base);
+  MAY_DEF_IF_THREAD (may_g.Heap.comp_limit = may_g.Heap.limit);
+#ifndef MAY_WANT_THREAD
   if (MAY_LIKELY (mark <= (void*)x)) {
+#else
+  if (MAY_LIKELY (mark <= (void*)x && (void*)x < may_g.Heap.comp_limit)) {
+#endif
     unsigned long length;
     update_max_top ();
-    /* Update heap variables for compact */
-    may_g.Heap.comp_mark = mark;
-    MAY_DEF_IF_THREAD (may_g.Heap.comp_base = may_g.Heap.base);
-    MAY_DEF_IF_THREAD (may_g.Heap.comp_limit = may_g.Heap.limit);
     may_g.Heap.compdiff = ((char*) may_g.Heap.top) - (char*) mark;
     /* Compact */
     x = compact_recur1 (x);
     /* Compute the length of the expression */
     length = (char*) may_g.Heap.top - (char*)mark - may_g.Heap.compdiff;
-    /* FIXME: memmove ! */
+    /* FIXME: memmove ? */
     memcpy (mark, (char*)mark + may_g.Heap.compdiff, length);
     may_g.Heap.top = (char*)mark + length;
   }
