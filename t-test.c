@@ -531,6 +531,8 @@ void test_set_get_q ()
 
   mpq_init (q1);
   mpq_init (q2);
+  may_mark_t mark2;
+  may_mark (mark2);
   for (v = -100 ; v < 100 ; v++)
     for (u = 1 ; u < 100 ; u++)
       {
@@ -541,7 +543,7 @@ void test_set_get_q ()
 	  fail ("get/set_q error", x);
 	if (mpq_cmp (q1, q2))
 	  fail ("get/set_q fail", x);
-	may_compact (mark, NULL);
+	may_compact (mark2, NULL);
       }
   mpq_clear (q2);
   mpq_clear (q1);
